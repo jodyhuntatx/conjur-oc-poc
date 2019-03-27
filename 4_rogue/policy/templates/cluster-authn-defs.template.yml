@@ -1,0 +1,28 @@
+---
+# This policy initializes the authentication service for the cluster
+- !policy
+  id: conjur/authn-k8s/{{ AUTHENTICATOR_ID }}
+  annotations:
+    description: Namespace defs for the Conjur cluster 
+  body:
+  - !webservice
+    annotations:
+      description: authn service for cluster
+
+  - !policy
+    id: ca 
+    body:
+    - !variable
+      id: cert
+      annotations:
+        description: CA cert for Kubernetes Pods.
+    - !variable
+      id: key
+      annotations:
+        description: CA key for Kubernetes Pods.
+
+  # permit app authn ids in project layer to call authn service
+  - !permit
+    resource: !webservice 
+    privilege: [ read, authenticate ]
+    role: !layer /conjur/authn-k8s/{{ AUTHENTICATOR_ID }}/apps

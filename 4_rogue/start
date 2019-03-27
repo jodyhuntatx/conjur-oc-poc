@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+./0_check_dependencies.sh
+
+./delete_deployments.sh
+
+./1_create_test_app_namespace.sh
+./2_store_conjur_cert.sh
+./3_build_and_push_containers.sh
+#./4_load_policies.sh
+./5_deploy_test_app.sh
+./6_verify_authentication.sh

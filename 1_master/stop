@@ -1,0 +1,12 @@
+#!/bin/bash
+
+source ../config/cluster.config
+
+echo "Stopping master.."
+bash -c "docker stop $CONJUR_MASTER_CONTAINER_NAME >& /dev/null; docker rm $CONJUR_MASTER_CONTAINER_NAME >& /dev/null" &
+
+echo "Stopping cli.."
+bash -c "docker stop $CLI_CONTAINER_NAME >& /dev/null; docker rm $CLI_CONTAINER_NAME >& /dev/null" &
+
+echo "Removing cached files..."
+rm -rf $CACHE_DIR
