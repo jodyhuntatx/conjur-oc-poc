@@ -5,7 +5,7 @@ source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
 
-$cli login -u $OSHIFT_CLUSTER_ADMIN_USERNAME >& /dev/null
+$cli login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 set_namespace default
 

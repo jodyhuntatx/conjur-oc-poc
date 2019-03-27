@@ -7,7 +7,7 @@ source ../config/utils.sh
 
 set_namespace default
 
-oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME >& /dev/null
+oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 if has_namespace $TEST_APP_NAMESPACE_NAME; then
   $cli delete namespace $TEST_APP_NAMESPACE_NAME >& /dev/null &

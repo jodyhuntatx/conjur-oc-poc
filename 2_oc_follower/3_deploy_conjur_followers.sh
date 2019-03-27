@@ -9,7 +9,11 @@ main() {
   set_namespace $CONJUR_NAMESPACE_NAME
   docker_login
   deploy_conjur_followers
+
   sleep 10
+
+  update_follower_san  # NOTE: requires docker access to Conjur master
+
   echo "Followers created."
 }
 
@@ -40,6 +44,22 @@ deploy_conjur_followers() {
 
     echo "Creating passthrough route for conjur-follower service."
     $cli create route passthrough --service=conjur-follower
+}
+
+update_follower_san() {
+  announce "Updating Follower cert and seed file with OC route SAN."
+
+  # get route endpoint
+  conjur_follower_route=$(oc get routes | grep conjur-follower | awk '{ print $2 }')
+
+  # reissue cert w/ additional SAN
+  docker exec $CONJUR_MASTER_CONTAINER_NAME evoke ca issue --force conjur-follower $FOLLOWER_ALTNAMES $conjur_follower_route
+
+  echo "Updated conjur-follower cert SAN:"
+  docker exec $CONJUR_MASTER_CONTAINER_NAME openssl x509 -in /opt/conjur/etc/ssl/conjur-follower.pem -text | grep DNS
+
+  echo "Regenerating seed file..."
+  docker exec $CONJUR_MASTER_CONTAINER_NAME evoke seed follower conjur-follower > $FOLLOWER_SEED_FILE
 }
 
 main $@

@@ -18,7 +18,7 @@ pushd test-app
   ./build.sh
   for app_type in "${APPS[@]}"; do
     test_app_image=$(platform_image "test-$app_type-app")
-    docker tag test-app:$CONJUR_NAMESPACE_NAME $test_app_image
+    docker tag test-app:$TEST_APP_NAMESPACE_NAME $test_app_image
     docker push $test_app_image
   done
 popd

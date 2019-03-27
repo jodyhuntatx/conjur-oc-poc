@@ -1,2 +1,2 @@
 #!/bin/bash -e
-docker build -t test-app:$CONJUR_NAMESPACE_NAME .
+docker build -t test-app:$TEST_APP_NAMESPACE_NAME .
