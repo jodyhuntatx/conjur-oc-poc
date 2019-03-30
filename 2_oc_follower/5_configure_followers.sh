@@ -35,4 +35,4 @@ configure_follower() {
   $cli exec $pod_name -- evoke configure follower -p $CONJUR_MASTER_PORT
 }
 
-main $@
+main "$@"

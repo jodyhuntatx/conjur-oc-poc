@@ -8,7 +8,6 @@ source ../config/utils.sh
 main() {
   docker login -u _ -p $(oc whoami -t) $DOCKER_REGISTRY_PATH
   prepare_conjur_appliance_image
-  prepare_conjur_cli_image
   echo "Docker images pushed."
 }
 
@@ -20,17 +19,6 @@ prepare_conjur_appliance_image() {
 
   if ! is_minienv; then
     docker push $conjur_appliance_image
-  fi
-}
-
-prepare_conjur_cli_image() {
-  announce "Pulling and pushing Conjur CLI image."
-
-  cli_app_image=$(platform_image conjur-cli)
-  docker tag $CLI_IMAGE_NAME $cli_app_image
-
-  if ! is_minienv; then
-    docker push $cli_app_image
   fi
 }
 

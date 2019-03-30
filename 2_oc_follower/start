@@ -7,13 +7,9 @@ source ../config/openshift.config
 oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 ./0_check_dependencies.sh
-
-#./stop
-./delete_deployments.sh
-
+./stop
 ./1_prepare_conjur_namespace.sh
 ./2_prepare_docker_images.sh
 ./3_deploy_conjur_followers.sh
-./update_follower_san.sh
-./4_configure_followers.sh
-./5_deploy_cli.sh
+./4_update_follower_cert.sh
+./5_configure_followers.sh

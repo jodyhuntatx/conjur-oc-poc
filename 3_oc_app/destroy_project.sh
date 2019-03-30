@@ -4,11 +4,10 @@ set -euo pipefail
 source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
-source ./rogue.config
 
 set_namespace default
 
-oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME >& /dev/null
+oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 if has_namespace $TEST_APP_NAMESPACE_NAME; then
   $cli delete namespace $TEST_APP_NAMESPACE_NAME >& /dev/null &

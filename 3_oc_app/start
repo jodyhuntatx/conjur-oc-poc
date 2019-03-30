@@ -2,9 +2,7 @@
 set -euo pipefail
 
 ./0_check_dependencies.sh
-
-./delete_deployments.sh
-
+./stop
 ./1_create_test_app_namespace.sh
 ./2_store_conjur_cert.sh
 ./3_build_and_push_containers.sh

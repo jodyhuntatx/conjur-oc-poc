@@ -109,3 +109,4 @@ rotate_api_key() {
 function is_minienv() {
   $MINISHIFT
 }
+

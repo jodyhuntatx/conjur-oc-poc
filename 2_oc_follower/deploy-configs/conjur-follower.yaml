@@ -9,9 +9,6 @@ spec:
   ports:
   - port: 443
     name: https
-    nodePort: 30444
-  - port: 636
-    name: ldaps
   selector:
     app: conjur-follower
   type: LoadBalancer
@@ -40,8 +37,6 @@ spec:
         ports:
         - containerPort: 443
           name: https
-        - containerPort: 636
-          name: ldaps
         - containerPort: 5432
           name: pg-main
         - containerPort: 1999

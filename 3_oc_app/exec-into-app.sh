@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ../config/cluster.config
-source ../config/openshift.confg
+source ../config/openshift.config
 source ../config/utils.sh
 
 if [[ $# != 1 ]]; then
