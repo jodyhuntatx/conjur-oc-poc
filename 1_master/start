@@ -4,8 +4,9 @@ source ../config/cluster.config
 source ../config/openshift.config
 
 # This script deletes running instances and brings up 
-#   initialized Conjur Master & CLI nodes
-#   and leaves the user logged into the CLI as the admin user
+#   initialized Conjur Master, Follower & CLI nodes.
+#   It loads a simple demo policy and leaves the user
+#   logged into the CLI as the admin user.
 
 #################
 main() {
