@@ -1,4 +1,4 @@
-# conjur-oc-poc/1_master
+# 1_master
 
 Install & configuration artifacts Conjur Master, Follower and CLI.
 

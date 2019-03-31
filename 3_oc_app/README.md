@@ -1,4 +1,4 @@
-# conjur-oc-poc/3_oc_app
+# 3_oc_app
 
 Install & configuration scripts for a simple application in OpenShift.
 
