@@ -15,6 +15,9 @@ $cli delete svc/conjur-follower --force=true
 echo "Deleting Route to Follower service."
 $cli delete route conjur-follower --force=true
 
+echo "Deleting cluster role."
+$cli delete --ignore-not-found clusterrole conjur-authenticator-$CONJUR_NAMESPACE_NAME
+
 echo "Waiting for Conjur pods to terminate..."
 while [[ "$($cli get pods 2>&1)" != "No resources found." ]]; do
   echo -n '.'
