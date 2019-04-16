@@ -109,7 +109,7 @@ cli_up() {
 load_demo_policy() {
   # Copy policy into CLI and load it
   docker exec $CLI_CONTAINER_NAME mkdir -p /policy
-  docker cp ./demo-policy.yml $CLI_CONTAINER_NAME:/policy/demo-policy.yml
+  docker cp ../policy/demo-policy.yml $CLI_CONTAINER_NAME:/policy/demo-policy.yml
   docker exec $CLI_CONTAINER_NAME \
     conjur policy load root /policy/demo-policy.yml
   docker exec $CLI_CONTAINER_NAME \

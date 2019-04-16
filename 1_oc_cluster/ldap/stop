@@ -1,0 +1,1 @@
+docker stop ldap-server; docker rm ldap-server

@@ -9,6 +9,10 @@ docker login -u _ -p $(oc whoami -t) $DOCKER_REGISTRY_PATH
 
 announce "Building and pushing test app images."
 
+authenticator_image=$(platform_image conjur-authn-k8s-client)
+docker tag $AUTHENTICATOR_CLIENT_IMAGE $authenticator_image
+docker push $authenticator_image
+
 readonly APPS=(
   "init"
   "sidecar"

@@ -39,7 +39,7 @@ init_connection_specs() {
   test_sidecar_app_docker_image=$(platform_image test-sidecar-app)
   test_init_app_docker_image=$(platform_image test-init-app)
 
-  authenticator_client_image="cyberark/conjur-kubernetes-authenticator"
+  authenticator_client_image=$(platform_image conjur-authn-k8s-client)
 
   conjur_appliance_url=https://conjur-follower.$CONJUR_NAMESPACE_NAME.svc.cluster.local/api
   conjur_authenticator_url=https://conjur-follower.$CONJUR_NAMESPACE_NAME.svc.cluster.local/api/authn-k8s/$AUTHENTICATOR_ID

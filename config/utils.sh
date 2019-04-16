@@ -45,6 +45,15 @@ copy_file_to_container() {
   $cli cp "$from" $pod_name:"$to"
 }
 
+get_master_pod_name() {
+  pod_list=$($cli get pods -l app=conjur-master-node --no-headers | awk '{ print $1 }')
+  echo $pod_list | awk '{print $1}'
+}
+
+get_master_service_ip() {
+  echo $($cli get service conjur-master -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+}
+
 get_conjur_cli_pod_name() {
   pod_list=$($cli get pods -l app=conjur-cli --no-headers | awk '{ print $1 }')
   echo $pod_list | awk '{print $1}'

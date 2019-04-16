@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ../config/cluster.config
+
 # Authenticates as admin user and sets value of a specified variable
 
 AUTHN_USERNAME=admin

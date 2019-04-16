@@ -1,0 +1,9 @@
+.DS_Store
+standby-seed.tar
+haproxy.cfg
+!build/haproxy/haproxy.cfg
+tmp/
+output/
+notes.txt
+setenv.sh
+tmp*

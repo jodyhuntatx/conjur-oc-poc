@@ -10,4 +10,5 @@
   - !grant
     role: !layer 
     members:
-    - !layer /conjur/authn-k8s/dev1/apps
+    - !host /conjur/authn-k8s/dev1/apps/test-app/service_account/oc-test-app-summon-init
+    - !host /conjur/authn-k8s/dev1/apps/test-app/service_account/oc-test-app-summon-sidecar

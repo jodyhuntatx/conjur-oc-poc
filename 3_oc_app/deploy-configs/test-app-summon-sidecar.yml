@@ -42,7 +42,7 @@ spec:
           - mountPath: /run/conjur
             name: conjur-access-token
             readOnly: true
-      - image: cyberark/conjur-kubernetes-authenticator
+      - image: {{ AUTHENTICATOR_CLIENT_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         name: authenticator
         env:

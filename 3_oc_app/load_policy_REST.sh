@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+source ../config/cluster.config
+
 # Authenticates as admin user and loads policy file 
 
 AUTHN_USERNAME=admin

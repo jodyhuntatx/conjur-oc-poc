@@ -1,0 +1,13 @@
+- !host
+- !webservice
+  owner: !host
+- !group
+  owner: !host
+
+- !variable
+  id: bind-password/default
+  owner: !host
+
+- !variable
+  id: tls-ca-cert/default
+  owner: !host
