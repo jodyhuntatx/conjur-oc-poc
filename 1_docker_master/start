@@ -12,11 +12,21 @@ source ../config/openshift.config
 main() {
   ./stop
   sleep 5
+  configure_networking
   master_up
   follower_up
   cli_up
   load_demo_policy
   ./exec-into-cli.sh
+}
+
+#################
+configure_networking() {
+  # enable IPV4 port forwarding
+  sysctl -w net.ipv4.ip_forward=1
+  # update local firewall rules to allow container-container connections
+  firewall-cmd --permanent --zone=public --add-rich-rule='rule family=ipv4 source address=172.17.0.0/16 accept'
+  firewall-cmd --reload
 }
 
 #################
@@ -31,6 +41,10 @@ master_up() {
     --restart always \
     --security-opt seccomp:unconfined \
     $CONJUR_APPLIANCE_IMAGE 
+
+  # copy modified configuration recipe and nginx patch script into node
+  docker cp ./configure.rb.mod $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+  docker cp ./patch_nginx.sh $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/bin
 
   # Configure Conjur Master node
   echo "Configuring Conjur master..."
@@ -66,7 +80,11 @@ follower_up() {
     --security-opt seccomp:unconfined \
     $CONJUR_APPLIANCE_IMAGE
 
-  if [[ $NO_DNS ]]; then
+  # copy modified configuration recipe and nginx patch script into node
+  docker cp ./configure.rb.mod $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+  docker cp ./patch_nginx.sh $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/bin
+
+  if $NO_DNS; then
     # add entry to follower's /etc/hosts so $CONJUR_MASTER_HOST_NAME resolves
     docker exec -it $CONJUR_FOLLOWER_CONTAINER_NAME \
 	bash -c "echo \"$CONJUR_MASTER_HOST_IP $CONJUR_MASTER_HOST_NAME\" >> /etc/hosts"
@@ -79,6 +97,7 @@ follower_up() {
 		evoke unpack seed /tmp/follower-seed.tar
   docker exec $CONJUR_FOLLOWER_CONTAINER_NAME \
 		evoke configure follower -p $CONJUR_MASTER_PORT
+
 }
 
 #################

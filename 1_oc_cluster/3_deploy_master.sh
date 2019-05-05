@@ -45,6 +45,15 @@ deploy_conjur_master_cluster() {
       sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
       sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
       $cli create -f -
+
+  # turn of IPV6 listening in Master
+  docker exec $CONJUR_MASTER_CONTAINER_NAME \
+        sed -i 's/^.*\[\:\:\]\:80\;/  listen 127.0.0.1:80\;/' /etc/nginx/sites-enabled/conjur
+  docker exec $CONJUR_MASTER_CONTAINER_NAME \
+        sed -i 's/^.*\[\:\:1\]\:80\;//' /etc/nginx/sites-enabled/conjur
+  docker exec $CONJUR_MASTER_CONTAINER_NAME \
+        sed -i 's/^.*\[.*443.*//' /etc/conjur/nginx.d/00_ssl_port.conf
+
 }
 
 ######################
