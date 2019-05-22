@@ -43,8 +43,8 @@ master_up() {
     $CONJUR_APPLIANCE_IMAGE 
 
   # copy modified configuration recipe and nginx patch script into node
-#  docker cp ./configure.rb.mod $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
-#  docker cp ./patch_nginx.sh $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/bin
+  docker cp ../config/configure.rb.5.3.1 $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+  docker cp ../config/patch_nginx.sh $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/bin
 
   # Configure Conjur Master node
   echo "Configuring Conjur master..."
@@ -81,8 +81,8 @@ follower_up() {
     $CONJUR_APPLIANCE_IMAGE
 
   # copy modified configuration recipe and nginx patch script into node
-#  docker cp ./configure.rb.mod $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
-#  docker cp ./patch_nginx.sh $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/bin
+  docker cp ../config/configure.rb.5.3.1 $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+  docker cp .../config/patch_nginx.sh $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/bin
 
   if $NO_DNS; then
     # add entry to follower's /etc/hosts so $CONJUR_MASTER_HOST_NAME resolves

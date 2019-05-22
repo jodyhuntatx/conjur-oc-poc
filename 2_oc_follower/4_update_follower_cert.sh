@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # NOTE: ==>> REQUIRES "exec" ACCESS TO CONJUR MASTER <<==
 
@@ -10,7 +10,7 @@ echo "Updating Follower cert and seed file with OC route SAN."
 # get route endpoint
 conjur_follower_route=$(oc get routes | grep conjur-follower | awk '{ print $2 }')
 
-if [[ $CONJUR_MASTER_IN_OC ]]; then
+if $CONJUR_MASTER_IN_OC ; then
   conjur_master_pod=$(get_master_pod_name)
   exec_command="oc exec $conjur_master_pod --"
 else

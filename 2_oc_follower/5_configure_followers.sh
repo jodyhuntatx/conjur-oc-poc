@@ -32,8 +32,11 @@ configure_follower() {
     $cli exec -it $pod_name -- bash -c "echo \"$CONJUR_MASTER_HOST_IP    $CONJUR_MASTER_HOST_NAME\" >> /etc/hosts"
   fi
 
-#  $cli exec $pod_name -- evoke configure follower -p $CONJUR_MASTER_PORT
-  $cli exec $pod_name -- evoke configure follower
+  # copy modified configuration recipe and nginx patch script into node
+  copy_file_to_container "../config/configure.rb.5.3.1" "/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb" "$pod_name"
+  copy_file_to_container "../config/patch_nginx.sh" "/opt/conjur/evoke/bin" "$pod_name"
+
+  $cli exec $pod_name -- evoke configure follower -p $CONJUR_MASTER_PORT
 }
 
 main "$@"
