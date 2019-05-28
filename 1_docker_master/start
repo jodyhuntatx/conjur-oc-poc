@@ -100,7 +100,7 @@ init_follower_authn() {
 
 ###################################
 load_policies() {
-  announce "Initializing Conjur authorization policies..."
+  echo "Initializing Conjur authorization policies..."
 
   sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" \
      ./policy/templates/cluster-authn-defs.template.yml |
@@ -115,7 +115,7 @@ load_policies() {
     > ./policy/seed-service.yml
 
   # copy policy directory contents to cli
-  docker cp ./policy $CLI_CONTAINER_NAME:/policy
+  oc rsync ./policy $CLI_CONTAINER_NAME:/policy
 
   docker exec -it $CLI_CONTAINER_NAME conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD
 
