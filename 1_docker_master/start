@@ -114,18 +114,13 @@ load_policies() {
     sed -e "s#{{ CONJUR_SERVICEACCOUNT_NAME }}#$CONJUR_SERVICEACCOUNT_NAME#g" \
     > ./policy/seed-service.yml
 
-  # copy policy directory contents to cli
-  oc rsync ./policy $CLI_CONTAINER_NAME:/policy
-
-  docker exec -it $CLI_CONTAINER_NAME conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD
-
   POLICY_FILE_LIST="
   policy/cluster-authn-defs.yml
   policy/seed-service.yml
   "
   for i in $POLICY_FILE_LIST; do
         echo "Loading policy file: $i"
-        docker exec $CLI_CONTAINER_NAME conjur policy load root "/policy/$i"
+        ./load_policy_REST.sh root "/policy/$i"
   done
 
   echo "Conjur policies loaded."
@@ -160,13 +155,13 @@ initialize_variables() {
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/ca-cert \
     "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r '.data["ca.crt"]' \
-      | base64 -D)"
+      | base64 -d)"
 
   docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/service-account-token \
     "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r .data.token \
-      | base64 -D)"
+      | base64 -d)"
 
   docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
