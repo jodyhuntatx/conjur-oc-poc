@@ -14,8 +14,9 @@ main() {
   sleep 5
 #  configure_networking
   master_up
-  follower_up
   cli_up
+  init_follower_authn
+  follower_up
   load_demo_policy
   ./exec-into-cli.sh
 }
@@ -44,6 +45,7 @@ master_up() {
 
   # copy modified configuration recipe and nginx patch script into node
   docker cp ../config/configure.rb.5.3.1 $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+#  docker cp ../config/configure.rb.mod $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
   docker cp ../config/patch_nginx.sh $CONJUR_MASTER_CONTAINER_NAME:/opt/conjur/evoke/bin
 
   # Configure Conjur Master node
@@ -64,40 +66,6 @@ master_up() {
   echo "Caching Conjur Follower seed files..."
   rm -f $FOLLOWER_SEED_FILE
   docker exec $CONJUR_MASTER_CONTAINER_NAME evoke seed follower conjur-follower > $FOLLOWER_SEED_FILE
-
-  echo "Initializing Conjur K8s authenticator service..."
-  docker exec -it $CONJUR_MASTER_CONTAINER_NAME chpst -u conjur conjur-plugin-service possum rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"]
-}
-
-############################
-follower_up() {
-  # Bring up Conjur Follower node
-  docker run -d \
-    --name $CONJUR_FOLLOWER_CONTAINER_NAME \
-    --label role=conjur_node \
-    -p "$CONJUR_FOLLOWER_PORT:443" \
-    --restart always \
-    --security-opt seccomp:unconfined \
-    $CONJUR_APPLIANCE_IMAGE
-
-  # copy modified configuration recipe and nginx patch script into node
-  docker cp ../config/configure.rb.5.3.1 $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
-  docker cp .../config/patch_nginx.sh $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/bin
-
-  if $NO_DNS; then
-    # add entry to follower's /etc/hosts so $CONJUR_MASTER_HOST_NAME resolves
-    docker exec -it $CONJUR_FOLLOWER_CONTAINER_NAME \
-	bash -c "echo \"$CONJUR_MASTER_HOST_IP $CONJUR_MASTER_HOST_NAME\" >> /etc/hosts"
-  fi
-
-  echo "Initializing Conjur Follower"
-  docker cp $FOLLOWER_SEED_FILE \
-		$CONJUR_FOLLOWER_CONTAINER_NAME:/tmp/follower-seed.tar
-  docker exec $CONJUR_FOLLOWER_CONTAINER_NAME \
-		evoke unpack seed /tmp/follower-seed.tar
-  docker exec $CONJUR_FOLLOWER_CONTAINER_NAME \
-		evoke configure follower -p $CONJUR_MASTER_PORT
-
 }
 
 #################
@@ -121,6 +89,154 @@ cli_up() {
     conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD
 }
 
+############################
+init_follower_authn() {
+ load_policies
+ apply_manifest
+ initialize_variables
+ initialize_ca
+ initialize_config_map
+}
+
+###################################
+load_policies() {
+  announce "Initializing Conjur authorization policies..."
+
+  sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" \
+     ./policy/templates/cluster-authn-defs.template.yml |
+    sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" |
+    sed -e "s#{{ CONJUR_SERVICEACCOUNT_NAME }}#$CONJUR_SERVICEACCOUNT_NAME#g" \
+    > ./policy/cluster-authn-defs.yml
+
+  sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" \
+    ./policy/templates/seed-service.template.yml |
+    sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" |
+    sed -e "s#{{ CONJUR_SERVICEACCOUNT_NAME }}#$CONJUR_SERVICEACCOUNT_NAME#g" \
+    > ./policy/seed-service.yml
+
+  # copy policy directory contents to cli
+  docker cp ./policy $CLI_CONTAINER_NAME:/policy
+
+  docker exec -it $CLI_CONTAINER_NAME conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD
+
+  POLICY_FILE_LIST="
+  policy/cluster-authn-defs.yml
+  policy/seed-service.yml
+  "
+  for i in $POLICY_FILE_LIST; do
+        echo "Loading policy file: $i"
+        docker exec $CLI_CONTAINER_NAME conjur policy load root "/policy/$i"
+  done
+
+  echo "Conjur policies loaded."
+}
+
+###################################
+apply_manifest() {
+  echo "Applying manifest in cluster..."
+
+  if [[ $PLATFORM == openshift ]]; then
+    oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
+  fi
+
+  sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" \
+     ./manifests/conjur-follower-authn.template.yaml \
+    > ./manifests/conjur-follower-authn.yaml
+  oc apply -f ./manifests/conjur-follower-authn.yaml
+
+  echo "Manifest applied."
+}
+
+###################################
+initialize_variables() {
+  echo "Initializing variables..."
+
+  TOKEN_SECRET_NAME="$(oc get secrets -n $CONJUR_NAMESPACE_NAME \
+    | grep 'conjur.*service-account-token' \
+    | head -n1 \
+    | awk '{print $1}')"
+
+  docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/ca-cert \
+    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+      | jq -r '.data["ca.crt"]' \
+      | base64 -D)"
+
+  docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/service-account-token \
+    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+      | jq -r .data.token \
+      | base64 -D)"
+
+  docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
+    "$(oc config view --minify -o json \
+      | jq -r '.clusters[0].cluster.server')"
+
+  echo "Variables initialized."
+}
+
+###################################
+initialize_ca() {
+  echo "Initializing CA in Conjur Master..."
+
+  docker exec $CONJUR_MASTER_CONTAINER_NAME \
+    chpst -u conjur conjur-plugin-service possum \
+      rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"]
+
+  docker exec $CONJUR_MASTER_CONTAINER_NAME bash -c \
+    'echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/docs-$AUTHENTICATOR_ID\" >> \
+      /opt/conjur/etc/conjur.conf && \
+        sv restart conjur'
+
+  echo "CA initialized."
+}
+
+###################################
+initialize_config_map() {
+  echo "Storing Conjur cert in config map for cluster apps to use."
+
+  oc delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
+
+  # Store the Conjur cert in a ConfigMap.
+  oc create configmap -n default $CONJUR_CONFIG_MAP --from-file=ssl-certificate=<(cat "$CONJUR_CERT_FILE")
+
+  echo "Conjur cert stored."
+}
+
+############################
+follower_up() {
+  # Bring up Conjur Follower node
+  docker run -d \
+    --name $CONJUR_FOLLOWER_CONTAINER_NAME \
+    --label role=conjur_node \
+    -p "$CONJUR_FOLLOWER_PORT:443" \
+    --restart always \
+    --security-opt seccomp:unconfined \
+    $CONJUR_APPLIANCE_IMAGE
+
+  # copy modified configuration recipe and nginx patch script into node
+  docker cp ../config/configure.rb.5.3.1 $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+#  docker cp ../config/configure.rb.mod $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/chef/cookbooks/conjur/recipes/configure.rb
+  docker cp ../config/patch_nginx.sh $CONJUR_FOLLOWER_CONTAINER_NAME:/opt/conjur/evoke/bin
+
+  if $NO_DNS; then
+    # add entry to follower's /etc/hosts so $CONJUR_MASTER_HOST_NAME resolves
+    docker exec -it $CONJUR_FOLLOWER_CONTAINER_NAME \
+	bash -c "echo \"$CONJUR_MASTER_HOST_IP $CONJUR_MASTER_HOST_NAME\" >> /etc/hosts"
+  fi
+
+  echo "Initializing Conjur Follower"
+  docker cp $FOLLOWER_SEED_FILE \
+		$CONJUR_FOLLOWER_CONTAINER_NAME:/tmp/follower-seed.tar
+  docker exec $CONJUR_FOLLOWER_CONTAINER_NAME \
+		evoke unpack seed /tmp/follower-seed.tar
+  docker exec $CONJUR_FOLLOWER_CONTAINER_NAME \
+		evoke configure follower -p $CONJUR_MASTER_PORT
+
+}
+
+############################
 load_demo_policy() {
   # Copy policy into CLI and load it & init variables
   docker exec $CLI_CONTAINER_NAME \
