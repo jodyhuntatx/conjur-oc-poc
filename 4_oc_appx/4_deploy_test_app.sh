@@ -42,14 +42,15 @@ init_connection_specs() {
 
   authenticator_client_image=$(platform_image conjur-authn-k8s-client)
 
-  conjur_appliance_url=https://conjur-follower.$CONJUR_NAMESPACE_NAME.svc.cluster.local/api
-  conjur_authenticator_url=https://conjur-follower.$CONJUR_NAMESPACE_NAME.svc.cluster.local/api/authn-k8s/$AUTHENTICATOR_ID
+  conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
+  conjur_authenticator_url=$CONJUR_APPLIANCE_URL/api/authn-k8s/$AUTHENTICATOR_ID
 
   conjur_authn_login_prefix=host/conjur/authn-k8s/$AUTHENTICATOR_ID/apps/$TEST_APP_NAMESPACE_NAME/service_account
 }
 
 ###########################
 copy_conjur_config_map() {
+  $cli delete --ignore-not-found cm $CONJUR_CONFIG_MAP
   $cli get cm $CONJUR_CONFIG_MAP -n default -o yaml \
     | sed "s/namespace: default/namespace: $TEST_APP_NAMESPACE_NAME/" \
     | $cli create -f -
@@ -76,7 +77,7 @@ deploy_sidecar_app() {
     sed -e "s#{{ CONJUR_AUTHN_URL }}#$conjur_authenticator_url#g" |
     sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
     sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
-    sed -e "s#{{ CONFIG_MAP_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
+    sed -e "s#{{ CONFIG_MAP_NAME }}#$CONJUR_CONFIG_MAP#g" |
     sed -e "s#{{ CONJUR_VERSION }}#'$CONJUR_VERSION'#g" |
     $cli create -f -
 
@@ -104,7 +105,7 @@ deploy_init_container_app() {
     sed -e "s#{{ CONJUR_AUTHN_URL }}#$conjur_authenticator_url#g" |
     sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
     sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
-    sed -e "s#{{ CONFIG_MAP_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
+    sed -e "s#{{ CONFIG_MAP_NAME }}#$CONJUR_CONFIG_MAP#g" |
     sed -e "s#{{ CONJUR_VERSION }}#'$CONJUR_VERSION'#g" |
     $cli create -f -
 

@@ -4,15 +4,15 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cyberark
+  name: conjur
   labels:
-    name: cyberark
+    name: conjur
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: conjur-cluster
-  namespace: cyberark
+  namespace: conjur
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -39,7 +39,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: conjur-cluster
-  namespace: cyberark
+  namespace: conjur
 roleRef:
   kind: ClusterRole
   name: conjur-authenticator

@@ -40,6 +40,7 @@ master_up() {
     -p "$CONJUR_MASTER_PGSYNC_PORT:5432" \
     -p "$CONJUR_MASTER_PGAUDIT_PORT:1999" \
     --restart always \
+    -e "CONJUR_AUTHENTICATORS=$CONJUR_AUTHENTICATORS" \
     --security-opt seccomp:unconfined \
     $CONJUR_APPLIANCE_IMAGE 
 
@@ -115,12 +116,12 @@ load_policies() {
     > ./policy/seed-service.yml
 
   POLICY_FILE_LIST="
-  policy/cluster-authn-defs.yml
-  policy/seed-service.yml
+  ./policy/cluster-authn-defs.yml
+  ./policy/seed-service.yml
   "
   for i in $POLICY_FILE_LIST; do
         echo "Loading policy file: $i"
-        ./load_policy_REST.sh root "/policy/$i"
+        ./load_policy_REST.sh root "$i"
   done
 
   echo "Conjur policies loaded."
@@ -180,7 +181,7 @@ initialize_ca() {
       rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"]
 
   docker exec $CONJUR_MASTER_CONTAINER_NAME bash -c \
-    'echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/docs-$AUTHENTICATOR_ID\" >> \
+    'echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/dev1\" >> \
       /opt/conjur/etc/conjur.conf && \
         sv restart conjur'
 
@@ -206,6 +207,7 @@ follower_up() {
     --name $CONJUR_FOLLOWER_CONTAINER_NAME \
     --label role=conjur_node \
     -p "$CONJUR_FOLLOWER_PORT:443" \
+    -e "CONJUR_AUTHENTICATORS=$CONJUR_AUTHENTICATORS" \
     --restart always \
     --security-opt seccomp:unconfined \
     $CONJUR_APPLIANCE_IMAGE
