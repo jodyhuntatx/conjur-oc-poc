@@ -96,6 +96,7 @@ init_follower_authn() {
  apply_manifest
  initialize_variables
  initialize_ca
+ whitelist_authenticators
  initialize_config_map
 }
 
@@ -147,6 +148,13 @@ apply_manifest() {
 initialize_variables() {
   echo "Initializing variables..."
 
+  # Use a cap-D for decoding on Macs
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    BASE64D="base64 -d"
+  else
+    BASE64D="base64 -D"
+  fi
+
   TOKEN_SECRET_NAME="$(oc get secrets -n $CONJUR_NAMESPACE_NAME \
     | grep 'conjur.*service-account-token' \
     | head -n1 \
@@ -156,13 +164,13 @@ initialize_variables() {
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/ca-cert \
     "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r '.data["ca.crt"]' \
-      | base64 -d)"
+      | $BASE64D)"
 
   docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/service-account-token \
     "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r .data.token \
-      | base64 -d)"
+      | $BASE64D)"
 
   docker exec -it $CLI_CONTAINER_NAME conjur variable values add \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
@@ -180,12 +188,19 @@ initialize_ca() {
     chpst -u conjur conjur-plugin-service possum \
       rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"]
 
-  docker exec $CONJUR_MASTER_CONTAINER_NAME bash -c \
-    'echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/dev1\" >> \
-      /opt/conjur/etc/conjur.conf && \
-        sv restart conjur'
-
   echo "CA initialized."
+}
+
+###################################
+whitelist_authenticators() {
+  echo "Updating list of whitelisted authenticators..."
+
+  docker exec $CONJUR_MASTER_CONTAINER_NAME bash -c \
+    "echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/$AUTHENTICATOR_ID\" >> \
+      /opt/conjur/etc/conjur.conf && \
+        sv restart conjur"
+
+  echo "Authenticators updated."
 }
 
 ###################################
@@ -207,7 +222,6 @@ follower_up() {
     --name $CONJUR_FOLLOWER_CONTAINER_NAME \
     --label role=conjur_node \
     -p "$CONJUR_FOLLOWER_PORT:443" \
-    -e "CONJUR_AUTHENTICATORS=$CONJUR_AUTHENTICATORS" \
     --restart always \
     --security-opt seccomp:unconfined \
     $CONJUR_APPLIANCE_IMAGE

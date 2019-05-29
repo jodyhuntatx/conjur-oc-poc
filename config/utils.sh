@@ -21,10 +21,6 @@ announce() {
   echo "++++++++++++++++++++++++++++++++++++++"
 }
 
-platform_image() {
-  echo "$DOCKER_REGISTRY_PATH/$CONJUR_NAMESPACE_NAME/$1:$CONJUR_NAMESPACE_NAME"
-}
-
 has_namespace() {
   if $cli get namespace "$1" &> /dev/null; then
     true

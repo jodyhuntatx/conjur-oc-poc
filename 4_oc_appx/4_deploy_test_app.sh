@@ -37,10 +37,9 @@ init_registry_creds() {
 
 ###########################
 init_connection_specs() {
-  test_sidecar_app_docker_image=$(platform_image test-sidecar-app)
-  test_init_app_docker_image=$(platform_image test-init-app)
-
-  authenticator_client_image=$(platform_image conjur-authn-k8s-client)
+  test_sidecar_app_docker_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-sidecar-app:$TEST_APP_NAMESPACE_NAME"
+  test_init_app_docker_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-init-app:$TEST_APP_NAMESPACE_NAME"
+  authenticator_client_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/conjur-authn-k8s-client:$TEST_APP_NAMESPACE_NAME"
 
   conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
   conjur_authenticator_url=$CONJUR_APPLIANCE_URL/api/authn-k8s/$AUTHENTICATOR_ID
