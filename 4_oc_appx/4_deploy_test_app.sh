@@ -42,7 +42,7 @@ init_connection_specs() {
   authenticator_client_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/conjur-authn-k8s-client:$TEST_APP_NAMESPACE_NAME"
 
   conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
-  conjur_authenticator_url=$CONJUR_APPLIANCE_URL/api/authn-k8s/$AUTHENTICATOR_ID
+  conjur_authenticator_url=$conjur_appliance_url/api/authn-k8s/$AUTHENTICATOR_ID
 
   conjur_authn_login_prefix=host/conjur/authn-k8s/$AUTHENTICATOR_ID/apps/$TEST_APP_NAMESPACE_NAME/service_account
 }
