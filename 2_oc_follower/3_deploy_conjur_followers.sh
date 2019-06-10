@@ -32,7 +32,7 @@ docker_login() {
 deploy_conjur_followers() {
   announce "Deploying Conjur Follower pods."
 
-  conjur_appliance_image=$(platform_image "conjur-appliance")
+  conjur_appliance_image=$(conjur_image "conjur-appliance")
 
   sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" "./deploy-configs/conjur-follower.yaml" |
     sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |

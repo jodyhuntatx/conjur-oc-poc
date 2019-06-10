@@ -11,7 +11,10 @@ source ../config/openshift.config
 #################
 main() {
   ./stop
-  sleep 5
+  while [[ "$(docker ps -a | grep $CONJUR_MASTER_CONTAINER_NAME)" != "" ]]; do
+    echo -n '.'
+    sleep 3
+  done
 #  configure_networking
   master_up
   cli_up
@@ -93,11 +96,13 @@ cli_up() {
 ############################
 init_follower_authn() {
  load_policies
- apply_manifest
- initialize_variables
  initialize_ca
- whitelist_authenticators
- initialize_config_map
+ if ! $FOLLOWERS_IN_OSHIFT; then
+   apply_manifest
+   initialize_variables
+   whitelist_authenticators
+   initialize_config_map
+ fi
 }
 
 ###################################
@@ -132,9 +137,7 @@ load_policies() {
 apply_manifest() {
   echo "Applying manifest in cluster..."
 
-  if [[ $PLATFORM == openshift ]]; then
-    oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
-  fi
+  oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
   sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" \
      ./manifests/conjur-follower-authn.template.yaml \

@@ -14,7 +14,7 @@ main() {
 prepare_conjur_appliance_image() {
   announce "Tagging and pushing Conjur appliance"
 
-  conjur_appliance_image=$(platform_image conjur-appliance)
+  conjur_appliance_image=$(conjur_image conjur-appliance)
   docker tag $CONJUR_APPLIANCE_IMAGE $conjur_appliance_image
 
   if ! is_minienv; then
