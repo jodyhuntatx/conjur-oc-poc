@@ -41,10 +41,11 @@ init_connection_specs() {
   test_init_app_docker_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-init-app:$TEST_APP_NAMESPACE_NAME"
   authenticator_client_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/conjur-authn-k8s-client:$TEST_APP_NAMESPACE_NAME"
 
+  # Set authn URL to either Follower service in Oshift or external Follower
   if $CONJUR_FOLLOWERS_IN_OSHIFT; then
-    conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
-  else
     conjur_appliance_url=https://conjur-follower.$CONJUR_NAMESPACE_NAME.svc.cluster.local/api
+  else
+    conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
   fi
 
   conjur_authenticator_url=$conjur_appliance_url/authn-k8s/$AUTHENTICATOR_ID
