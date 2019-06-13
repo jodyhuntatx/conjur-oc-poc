@@ -97,7 +97,7 @@ cli_up() {
 init_follower_authn() {
  load_policies
  initialize_ca
- if ! $FOLLOWERS_IN_OSHIFT; then
+ if ! $CONJUR_FOLLOWERS_IN_OSHIFT; then
    apply_manifest
    initialize_variables
    whitelist_authenticators

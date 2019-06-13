@@ -34,6 +34,13 @@ spec:
         env:
           - name: CONJUR_AUTHENTICATORS
             value: authn-k8s/{{ AUTHENTICATOR_ID }}
+        resources:
+          requests:
+            cpu: "1"
+            memory: 4Gi
+          limits:
+            cpu: "1"
+            memory: 4Gi
         ports:
         - containerPort: 443
           name: https

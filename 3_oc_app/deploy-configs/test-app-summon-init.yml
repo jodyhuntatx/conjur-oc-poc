@@ -20,6 +20,10 @@ spec:
         app: test-app-summon-init
     spec:
       serviceAccountName: oc-test-app-summon-init
+      hostAliases:
+      - ip: "{{ CONJUR_MASTER_HOST_IP }}"
+        hostnames:
+        - "{{ CONJUR_MASTER_HOST_NAME }}"
       containers:
       - image: {{ TEST_APP_DOCKER_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
