@@ -9,6 +9,7 @@ main() {
   set_namespace $CONJUR_NAMESPACE_NAME
   announce "Configuring followers."
   configure_followers
+  initialize_config_map
   echo "Followers configured."
 }
 
@@ -37,6 +38,18 @@ configure_follower() {
   copy_file_to_container "../config/patch_nginx.sh" "/opt/conjur/evoke/bin" "$pod_name"
 
   $cli exec $pod_name -- evoke configure follower -p $CONJUR_MASTER_PORT
+}
+
+###################################
+initialize_config_map() {
+  echo "Storing Conjur cert in config map for cluster apps to use."
+
+  oc delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
+
+  # Store the Conjur cert in a ConfigMap.
+  oc create configmap -n default $CONJUR_CONFIG_MAP --from-file=ssl-certificate=<(cat "$FOLLOWER_CERT_FILE")
+
+  echo "Conjur cert stored."
 }
 
 main "$@"

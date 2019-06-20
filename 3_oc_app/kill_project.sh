@@ -28,8 +28,8 @@ if has_namespace $TEST_APP_NAMESPACE_NAME; then
 fi
 
 set +e
-test_sidecar_app_docker_image=$(platform_image test-sidecar-app)
-test_init_app_docker_image=$(platform_image test-init-app)
+test_sidecar_app_docker_image=$(app_image test-sidecar-app)
+test_init_app_docker_image=$(app_image test-init-app)
 docker rmi $test_sidecar_app_docker_image $test_init_app_docker_image &> /dev/null
 
 echo "Test app environment purged."

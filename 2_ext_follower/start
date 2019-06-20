@@ -1,0 +1,77 @@
+#!/bin/bash 
+
+source ../config/cluster.config
+source ../config/openshift.config
+
+#################
+main() {
+  apply_manifest
+  initialize_variables
+  initialize_config_map
+}
+
+###################################
+apply_manifest() {
+  echo "Applying manifest in cluster..."
+
+  oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
+
+  sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" \
+     ./manifests/conjur-follower-authn.template.yaml \
+    > ./manifests/conjur-follower-authn.yaml
+  oc apply -f ./manifests/conjur-follower-authn.yaml
+
+  echo "Manifest applied."
+}
+
+###################################
+initialize_variables() {
+  echo "Initializing variables..."
+
+  # Use a cap-D for decoding on Macs
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    BASE64D="base64 -d"
+  else
+    BASE64D="base64 -D"
+  fi
+
+  TOKEN_SECRET_NAME="$(oc get secrets -n $CONJUR_NAMESPACE_NAME \
+    | grep 'conjur.*service-account-token' \
+    | head -n1 \
+    | awk '{print $1}')"
+
+  echo "Initializing cluster ca cert..."
+  ./var_value_add_REST.sh \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/ca-cert \
+    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+      | jq -r '.data["ca.crt"]' \
+      | $BASE64D)"
+
+  echo "Initializing service-account token..."
+  ./var_value_add_REST.sh \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/service-account-token \
+    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+      | jq -r .data.token \
+      | $BASE64D)"
+
+  echo "Initializing cluster API URL..."
+  ./var_value_add_REST.sh \
+    conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
+    "$(oc config view --minify -o yaml | grep server | awk '{print $2}')"
+
+  echo "Variables initialized."
+}
+
+###################################
+initialize_config_map() {
+  echo "Storing Conjur cert in config map for cluster apps to use."
+
+  oc delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
+
+  # Store the Conjur cert in a ConfigMap.
+  oc create configmap -n default $CONJUR_CONFIG_MAP --from-file=ssl-certificate=<(cat "$FOLLOWER_CERT_FILE")
+
+  echo "Conjur cert stored."
+}
+
+main "$@"

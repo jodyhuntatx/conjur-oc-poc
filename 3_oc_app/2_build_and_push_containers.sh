@@ -20,7 +20,9 @@ readonly APPS=(
 )
 
 pushd test-app
-  ./build.sh
+  if $CONNECTED; then
+    ./build.sh
+  fi
   for app_type in "${APPS[@]}"; do
     test_app_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-$app_type-app:$TEST_APP_NAMESPACE_NAME"
     docker tag test-app:latest $test_app_image
