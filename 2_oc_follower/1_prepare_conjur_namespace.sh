@@ -1,22 +1,18 @@
 #!/bin/bash 
 set -euo pipefail
 
+# This scripts requires running w/ cluster admin privileges
+
 source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
 
 main() {
   set_namespace default
-  oc_login
   create_conjur_namespace
   create_service_account
   create_cluster_role
   configure_oc_rbac
-}
-
-oc_login() {
-  echo "Logging in as cluster admin..."
-  oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 }
 
 create_conjur_namespace() {
@@ -36,15 +32,15 @@ create_service_account() {
     if has_serviceaccount $CONJUR_SERVICEACCOUNT_NAME; then
         echo "Service account '$CONJUR_SERVICEACCOUNT_NAME' exists, not going to create it."
     else
-        $cli create serviceaccount $CONJUR_SERVICEACCOUNT_NAME -n $CONJUR_NAMESPACE_NAME
+        $CLI create serviceaccount $CONJUR_SERVICEACCOUNT_NAME -n $CONJUR_NAMESPACE_NAME
     fi
 }
 
 create_cluster_role() {
-  $cli delete --ignore-not-found clusterrole conjur-authenticator-$CONJUR_NAMESPACE_NAME
+  $CLI delete --ignore-not-found clusterrole conjur-authenticator-$CONJUR_NAMESPACE_NAME
 
   sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" ./deploy-configs/conjur-authenticator-role.yaml > ./deploy-configs/conjur-authenticator-role-$CONJUR_NAMESPACE_NAME.yaml
-    $cli apply -f ./deploy-configs/conjur-authenticator-role-$CONJUR_NAMESPACE_NAME.yaml
+    $CLI apply -f ./deploy-configs/conjur-authenticator-role-$CONJUR_NAMESPACE_NAME.yaml
 }
 
 configure_oc_rbac() {

@@ -15,15 +15,15 @@ if has_namespace "$TEST_APP_NAMESPACE_NAME"; then
   set_namespace $TEST_APP_NAMESPACE_NAME
 else
   echo "Creating '$TEST_APP_NAMESPACE_NAME' namespace."
-  $cli new-project $TEST_APP_NAMESPACE_NAME
+  $CLI new-project $TEST_APP_NAMESPACE_NAME
   set_namespace $TEST_APP_NAMESPACE_NAME
 fi
 
 announce "Creating authenticator role binding."
-$cli delete --ignore-not-found rolebinding test-app-conjur-authenticator-role-binding-$CONJUR_NAMESPACE_NAME
+$CLI delete --ignore-not-found rolebinding test-app-conjur-authenticator-role-binding-$CONJUR_NAMESPACE_NAME
 sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" ./deploy-configs/test-app-conjur-authenticator-role-binding.yml |
   sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" |
-  $cli create -f -
+  $CLI create -f -
 
 announce "Setting RBAC privileges."
 # add permissions for Conjur admin user

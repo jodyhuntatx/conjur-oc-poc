@@ -5,12 +5,12 @@ source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
 
-$cli login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
+$CLI login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 set_namespace default
 
 if has_namespace $CONJUR_NAMESPACE_NAME; then
-  $cli delete namespace $CONJUR_NAMESPACE_NAME >& /dev/null &
+  $CLI delete namespace $CONJUR_NAMESPACE_NAME >& /dev/null &
 
   printf "Waiting for $CONJUR_NAMESPACE_NAME namespace deletion to complete"
 

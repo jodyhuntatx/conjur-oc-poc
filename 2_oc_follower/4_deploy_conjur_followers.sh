@@ -13,23 +13,21 @@ main() {
   deploy_conjur_followers
   enable_conjur_authentication
 
-  sleep 10
-
   echo "Followers created."
 }
 
 docker_login() {
   announce "Creating image pull secret."
 
-  $cli delete --ignore-not-found secrets dockerpullsecret
+  $CLI delete --ignore-not-found secrets dockerpullsecret
 
-  $cli secrets new-dockercfg dockerpullsecret \
+  $CLI secrets new-dockercfg dockerpullsecret \
          --docker-server=${DOCKER_REGISTRY_PATH} \
          --docker-username=_ \
-         --docker-password=$($cli whoami -t) \
+         --docker-password=$($CLI whoami -t) \
          --docker-email=_
 
-  $cli secrets add serviceaccount/conjur-cluster secrets/dockerpullsecret --for=pull
+  $CLI secrets add serviceaccount/conjur-cluster secrets/dockerpullsecret --for=pull
 }
 
 add_server_certificate_to_configmap() {
@@ -38,7 +36,7 @@ add_server_certificate_to_configmap() {
 
   #master_cert=$(./get_cert_REST.sh $CONJUR_MASTER_HOST_NAME $CONJUR_MASTER_PORT)
   master_cert=$(cat "$MASTER_CERT_FILE")
-  $cli create configmap server-certificate \
+  $CLI create configmap server-certificate \
 	--from-literal=ssl-certificate="$master_cert" \
 	-n $CONJUR_NAMESPACE_NAME
 }
@@ -48,7 +46,7 @@ enable_conjur_authentication() {
     announce "Creating conjur service account and authenticator role binding."
 
     sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" "./deploy-configs/conjur-authenticator-role-binding.yaml" |
-        $cli create -f -
+        $CLI create -f -
   fi
 }
 
@@ -70,10 +68,10 @@ deploy_conjur_followers() {
     sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
     sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#${CONJUR_FOLLOWER_COUNT}#g" |
-    $cli create -f -
+    $CLI create -f -
 
     echo "Creating passthrough route for conjur-follower service."
-    $cli create route passthrough --service=conjur-follower
+    $CLI create route passthrough --service=conjur-follower
 }
 
 main $@

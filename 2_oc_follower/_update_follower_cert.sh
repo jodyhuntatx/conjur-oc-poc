@@ -12,7 +12,7 @@ conjur_follower_route=$(oc get routes | grep conjur-follower | awk '{ print $2 }
 
 if $CONJUR_MASTER_IN_OSHIFT ; then
   conjur_master_pod=$(get_master_pod_name)
-  exec_command="oc exec $conjur_master_pod --"
+  exec_command="$CLI exec $conjur_master_pod --"
 else
   exec_command="docker exec $CONJUR_MASTER_CONTAINER_NAME"
 fi

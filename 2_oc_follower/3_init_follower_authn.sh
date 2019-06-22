@@ -1,7 +1,9 @@
 #!/bin/bash 
 
 source ../config/cluster.config
-source ../config/openshift.config
+source ../config/$PLATFORM.config
+
+# This scripts requires running w/ cluster admin privileges
 
 #################
 main() {
@@ -14,12 +16,10 @@ main() {
 apply_manifest() {
   echo "Applying manifest in cluster..."
 
-  oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
-
   sed -e "s#{{ CONJUR_NAMESPACE_NAME }}#$CONJUR_NAMESPACE_NAME#g" \
-     ./manifests/conjur-follower-authn.template.yaml \
-    > ./manifests/conjur-follower-authn.yaml
-  oc apply -f ./manifests/conjur-follower-authn.yaml
+     ./deploy-configs/conjur-follower-authn.template.yaml \
+    > ./deploy-configs/conjur-follower-authn.yaml
+  $CLI apply -f ./deploy-configs/conjur-follower-authn.yaml
 
   echo "Manifest applied."
 }
@@ -35,7 +35,7 @@ initialize_variables() {
     BASE64D="base64 -D"
   fi
 
-  TOKEN_SECRET_NAME="$(oc get secrets -n $CONJUR_NAMESPACE_NAME \
+  TOKEN_SECRET_NAME="$($CLI get secrets -n $CONJUR_NAMESPACE_NAME \
     | grep 'conjur.*service-account-token' \
     | head -n1 \
     | awk '{print $1}')"
@@ -43,21 +43,21 @@ initialize_variables() {
   echo "Initializing cluster ca cert..."
   ./var_value_add_REST.sh \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/ca-cert \
-    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+    "$($CLI get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r '.data["ca.crt"]' \
       | $BASE64D)"
 
   echo "Initializing service-account token..."
   ./var_value_add_REST.sh \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/service-account-token \
-    "$(oc get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
+    "$($CLI get secret -n $CONJUR_NAMESPACE_NAME $TOKEN_SECRET_NAME -o json \
       | jq -r .data.token \
       | $BASE64D)"
 
   echo "Initializing cluster API URL..."
   ./var_value_add_REST.sh \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
-    "$(oc config view --minify -o yaml | grep server | awk '{print $2}')"
+    "$($CLI config view --minify -o yaml | grep server | awk '{print $2}')"
 
   echo "Variables initialized."
 }
@@ -66,12 +66,12 @@ initialize_variables() {
 initialize_config_map() {
   echo "Storing Conjur cert in config map for cluster apps to use."
 
-  oc delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
+  $CLI delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
 
   # Fetch Conjur Follower cert and store in a ConfigMap in the default project.
   # follower_cert=$(./get_cert_REST.sh $CONJUR_MASTER_HOST_NAME $CONJUR_FOLLOWER_PORT)
   follower_cert=$(cat "$FOLLOWER_CERT_FILE")
-  oc create configmap -n default $CONJUR_CONFIG_MAP --from-literal=ssl-certificate="$follower_cert"
+  $CLI create configmap -n default $CONJUR_CONFIG_MAP --from-literal=ssl-certificate="$follower_cert"
 
   echo "Conjur cert stored."
 }

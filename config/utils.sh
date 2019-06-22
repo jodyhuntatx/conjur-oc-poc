@@ -1,9 +1,5 @@
 #!/bin/bash
 
-PLATFORM=openshift
-DEPLOY_MASTER_CLUSTER="${DEPLOY_MASTER_CLUSTER:-false}"
-cli=oc
-
 check_env_var() {
   var_name=$1
 
@@ -30,7 +26,7 @@ app_image() {
 }
 
 has_namespace() {
-  if $cli get namespace "$1" &> /dev/null; then
+  if $CLI get namespace "$1" &> /dev/null; then
     true
   else
     false
@@ -38,7 +34,7 @@ has_namespace() {
 }
 
 has_serviceaccount() {
-  $cli get serviceaccount "$1" &> /dev/null;
+  $CLI get serviceaccount "$1" &> /dev/null;
 }
 
 copy_file_to_container() {
@@ -46,20 +42,20 @@ copy_file_to_container() {
   local to=$2
   local pod_name=$3
 
-  $cli cp "$from" $pod_name:"$to"
+  $CLI cp "$from" $pod_name:"$to"
 }
 
 get_master_pod_name() {
-  pod_list=$($cli get pods -l app=conjur-master-node --no-headers | awk '{ print $1 }')
+  pod_list=$($CLI get pods -l app=conjur-master-node --no-headers | awk '{ print $1 }')
   echo $pod_list | awk '{print $1}'
 }
 
 get_master_service_ip() {
-  echo $($cli get service conjur-master -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo $($CLI get service conjur-master -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 }
 
 get_conjur_cli_pod_name() {
-  pod_list=$($cli get pods -l app=conjur-cli --no-headers | awk '{ print $1 }')
+  pod_list=$($CLI get pods -l app=conjur-cli --no-headers | awk '{ print $1 }')
   echo $pod_list | awk '{print $1}'
 }
 
@@ -69,15 +65,15 @@ set_namespace() {
     exit -1
   fi
 
-  $cli config set-context $($cli config current-context) --namespace="$1" > /dev/null
+  $CLI config set-context $($CLI config current-context) --namespace="$1" > /dev/null
 }
 
 wait_for_node() {
-  wait_for_it -1 "$cli describe pod $1 | grep Status: | grep -q Running"
+  wait_for_it -1 "$CLI describe pod $1 | grep Status: | grep -q Running"
 }
 
 wait_for_service() {
-  wait_for_it -1 "$cli get service $1 --no-headers | grep -q -v pending"
+  wait_for_it -1 "$CLI get service $1 --no-headers | grep -q -v pending"
 }
 
 wait_for_it() {
@@ -112,14 +108,14 @@ rotate_api_key() {
 
   master_pod_name=$(get_master_pod_name)
 
-  $cli exec $master_pod_name -- conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD > /dev/null
-  api_key=$($cli exec $master_pod_name -- conjur user rotate_api_key)
-  $cli exec $master_pod_name -- conjur authn logout > /dev/null
+  $CLI exec $master_pod_name -- conjur authn login -u admin -p $CONJUR_ADMIN_PASSWORD > /dev/null
+  api_key=$($CLI exec $master_pod_name -- conjur user rotate_api_key)
+  $CLI exec $master_pod_name -- conjur authn logout > /dev/null
 
   echo $api_key
 }
 
 function is_minienv() {
-  $MINISHIFT
+  $MINIKUBE
 }
 
