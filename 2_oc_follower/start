@@ -2,17 +2,17 @@
 set -euo pipefail
 
 source ../config/cluster.config
-source ../config/openshift.config
+source ../config/$PLATFORM.config
 
 oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 
 ./0_check_dependencies.sh
 ./stop
 ./1_prepare_conjur_namespace.sh
-./3_init_follower_authn.sh
+./2_init_follower_authn.sh
 
 oc login -u $OSHIFT_CONJUR_ADMIN_USERNAME
 
-./2_prepare_docker_images.sh
+./3_prepare_docker_images.sh
 ./4_deploy_conjur_followers.sh
-#./_update_follower_cert.sh # regens follower cert w/ OC Route SAN
+./_update_follower_cert.sh # regenerates follower cert w/ OC Route SAN added

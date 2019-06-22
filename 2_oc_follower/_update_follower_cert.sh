@@ -1,6 +1,8 @@
-#!/bin/bash 
+#!/bin/bash -x
 
 # NOTE: ==>> REQUIRES "exec" ACCESS TO CONJUR MASTER <<==
+
+CONJUR_MASTER_IN_CLUSTER=false
 
 source ../config/cluster.config
 source ../config/utils.sh
@@ -8,9 +10,9 @@ source ../config/utils.sh
 echo "Updating Follower cert and seed file with OC route SAN."
 
 # get route endpoint
-conjur_follower_route=$(oc get routes | grep conjur-follower | awk '{ print $2 }')
+conjur_follower_route=$($CLI get routes | grep conjur-follower | awk '{ print $2 }')
 
-if $CONJUR_MASTER_IN_OSHIFT ; then
+if $CONJUR_MASTER_IN_CLUSTER ; then
   conjur_master_pod=$(get_master_pod_name)
   exec_command="$CLI exec $conjur_master_pod --"
 else
