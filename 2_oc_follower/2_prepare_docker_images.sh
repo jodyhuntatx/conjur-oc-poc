@@ -28,9 +28,11 @@ prepare_conjur_appliance_image() {
 prepare_seed_fetcher_image() {
   announce "Building and pushing seed-fetcher image."
 
-  pushd build/seed-fetcher
-    ./build.sh
-  popd
+  if $CONNECTED; then
+    pushd build/seed-fetcher
+      ./build.sh
+    popd
+  fi
 
   seed_fetcher_image=$(conjur_image seed-fetcher)
   docker tag seed-fetcher:$CONJUR_NAMESPACE_NAME $seed_fetcher_image
