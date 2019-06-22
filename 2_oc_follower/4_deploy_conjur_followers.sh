@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 set -eo pipefail
 
 source ../config/cluster.config
