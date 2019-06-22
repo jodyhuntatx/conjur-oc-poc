@@ -18,7 +18,7 @@ kind: DeploymentConfig
 metadata:
   name: conjur-follower
 spec:
-  replicas: {{ CONJUR_FOLLOWER_COUNT }}
+  replicas: 1
   template:
     metadata:
       labels:
@@ -28,9 +28,9 @@ spec:
     spec:
       serviceAccountName: conjur-cluster
       hostAliases:
-      - ip: "{{ CONJUR_MASTER_HOST_IP }}"
+      - ip: "192.168.99.100"
         hostnames:
-        - "{{ CONJUR_MASTER_HOST_NAME }}"
+        - "conjur-master"
       volumes:
       - name: seedfile
         emptyDir:
@@ -41,19 +41,19 @@ spec:
 
       initContainers:
       - name: authenticator
-        image: {{ CONJUR_SEED_FETCHER_IMAGE }}
-        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        image: 172.30.1.1:5000/conjur/seed-fetcher:conjur
+        imagePullPolicy: 
         env:
           - name: CONJUR_SEED_FILE_URL
-            value: {{ CONJUR_SEED_FILE_URL }}
+            value: https://conjur-master:30443/configuration/dev/seed/follower
           - name: SEEDFILE_DIR
             value: /tmp/seedfile
           - name: FOLLOWER_HOSTNAME
             value: conjur-follower # this should be the same value as the service name
           - name: AUTHENTICATOR_ID
-            value: {{ AUTHENTICATOR_ID }}
+            value: dev1
           - name: CONJUR_ACCOUNT
-            value: {{ CONJUR_ACCOUNT }}
+            value: dev
           - name: CONJUR_SSL_CERTIFICATE
             valueFrom:
               configMapKeyRef:
@@ -73,7 +73,7 @@ spec:
               fieldRef:
                 fieldPath: status.podIP
           - name: CONJUR_AUTHN_LOGIN
-            value: "{{ CONJUR_AUTHN_LOGIN_PREFIX }}/conjur-cluster"
+            value: "host/conjur/authn-k8s/dev1/apps/conjur/service_account/conjur-cluster"
         volumeMounts:
           - name: seedfile
             mountPath: /tmp/seedfile
@@ -83,13 +83,13 @@ spec:
       containers:
       - name: conjur-appliance
         command: ["/tmp/seedfile/start-follower.sh"]
-        image: {{ CONJUR_APPLIANCE_IMAGE }}
-        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        image: 172.30.1.1:5000/conjur/conjur-appliance:conjur
+        imagePullPolicy: 
         env:
           - name: CONJUR_MASTER_PORT
-            value: "{{ CONJUR_MASTER_PORT }}"
+            value: "30443"
           - name: CONJUR_AUTHENTICATORS
-            value: authn-k8s/{{ AUTHENTICATOR_ID }}
+            value: authn-k8s/dev1
           - name: SEEDFILE_DIR
             value: /tmp/seedfile
         resources:

@@ -47,7 +47,9 @@ initialize_config_map() {
   oc delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
 
   # Store the Conjur cert in a ConfigMap.
-  oc create configmap -n default $CONJUR_CONFIG_MAP --from-file=ssl-certificate=<(cat "$FOLLOWER_CERT_FILE")
+  # follower_cert=$(./get_cert_REST.sh $CONJUR_MASTER_HOST_NAME $CONJUR_FOLLOWER_PORT)
+  follower_cert=$(cat "$FOLLOWER_CERT_FILE")
+  oc create configmap -n default $CONJUR_CONFIG_MAP --from-literal=ssl-certificate="$follower_cert"
 
   echo "Conjur cert stored."
 }

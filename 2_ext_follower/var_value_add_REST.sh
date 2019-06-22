@@ -1,6 +1,13 @@
 #!/bin/bash
 
-source ../config/cluster.config
+if [[ $# -ne 2 ]] ; then
+  echo "Usage: $0 <variable-name> <variable-value>"
+  exit -1
+fi
+
+if [[ "$PLATFORM" == "" ]]; then
+  source ../config/cluster.config
+fi
 
 # Authenticates as admin user and sets value of a specified variable
 
@@ -13,10 +20,6 @@ AUTHN_TOKEN=""
 # $2 - value to assign
 main() {
 
-  if [[ $# -ne 2 ]] ; then
-    printf "\nUsage: %s <variable-name> <variable-value>\n" $0
-    exit -1
-  fi
   local variable_name=$1
   local variable_value=$2
 

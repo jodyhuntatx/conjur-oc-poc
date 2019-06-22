@@ -13,6 +13,9 @@ echo "Deleting Follower pods."
 $cli delete dc/conjur-follower --force=true
 $cli delete svc/conjur-follower --force=true
 
+echo "Deleting server-certificate config map."
+$cli delete --ignore-not-found cm server-certificate 
+
 echo "Deleting Route to Follower service."
 $cli delete route conjur-follower --force=true
 

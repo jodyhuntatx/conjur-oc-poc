@@ -11,5 +11,5 @@ oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
 ./1_prepare_conjur_namespace.sh
 ./2_prepare_docker_images.sh
 ./3_deploy_conjur_followers.sh
-./4_update_follower_cert.sh
-./5_configure_followers.sh
+#./4_update_follower_cert.sh
+#./5_configure_followers.sh

@@ -15,14 +15,6 @@ fi
 
 check_env_var "OSHIFT_CONJUR_ADMIN_USERNAME"
 
-# check if CONJUR_VERSION is consistent with CONJUR_APPLIANCE_IMAGE
-appliance_tag=${CONJUR_APPLIANCE_IMAGE//[A-Za-z.]*:/}
-appliance_version=${appliance_tag//[.-][0-9A-Za-z.-]*/}
-if [ "${appliance_version}" != "$CONJUR_VERSION" ]; then
-  echo "ERROR! Your appliance does not match the specified Conjur version."
-  exit 1
-fi
-
 check_env_var "FOLLOWER_SEED_FILE"
 if [[ ! -f "${FOLLOWER_SEED_FILE}" ]]; then
   echo "ERROR! Follower seed path '${FOLLOWER_SEED_FILE}' does not point to a file!"
