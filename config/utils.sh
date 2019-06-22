@@ -116,6 +116,6 @@ rotate_api_key() {
 }
 
 function is_minienv() {
-  $MINIKUBE
+  $THIS_IS_MINIKUBE
 }
 
