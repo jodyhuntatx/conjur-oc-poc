@@ -1,7 +1,7 @@
 #!/bin/bash 
 set -euo pipefail
 
-# This scripts requires running w/ cluster admin privileges
+# This script requires running w/ cluster admin privileges
 
 source ../config/cluster.config
 source ../config/openshift.config
@@ -54,9 +54,6 @@ configure_oc_rbac() {
   oc adm policy add-role-to-user system:image-builder $OSHIFT_CONJUR_ADMIN_USERNAME
   oc adm policy add-role-to-user admin $OSHIFT_CONJUR_ADMIN_USERNAME -n default
   oc adm policy add-role-to-user admin $OSHIFT_CONJUR_ADMIN_USERNAME -n $CONJUR_NAMESPACE_NAME
-
-  echo "Logging in as Conjur admin user, provide password as needed..."
-  oc login -u $OSHIFT_CONJUR_ADMIN_USERNAME
 }
 
 main $@

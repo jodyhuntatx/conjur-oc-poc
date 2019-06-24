@@ -3,7 +3,7 @@
 source ../config/cluster.config
 source ../config/$PLATFORM.config
 
-# This scripts requires running w/ cluster admin privileges
+# This script requires running w/ cluster admin privileges
 
 #################
 main() {
