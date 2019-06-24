@@ -41,13 +41,12 @@ copy_conjur_config_map() {
 
 ###########################
 enable_conjur_authentication() {
-  # if FOLLOWER_SEED env var begins with http...
-  if [[ "${FOLLOWER_SEED}" =~ ^http[s]?:// ]]; then
-    announce "Creating conjur service account and authenticator role binding."
+  echo "Creating seed-fetcher authenticator role binding."
 
-    sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" "./deploy-configs/conjur-authenticator-role-binding.yaml" |
-        $CLI create -f -
-  fi
+  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" "./deploy-configs/templates/conjur-authenticator-role-binding.template.yaml" \
+    > ./deploy-configs/conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  $CLI create -f ./deploy-configs/conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME.yaml
 }
 
 ###########################
@@ -57,18 +56,20 @@ deploy_conjur_followers() {
   conjur_appliance_image=$(conjur_image "conjur-appliance")
   seed_fetcher_image=$(conjur_image "seed-fetcher")
 
-  sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" "./deploy-configs/conjur-follower.yaml" |
+  sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" "./deploy-configs/templates/conjur-follower.template.yaml" |
     sed -e "s#{{ CONJUR_CONFIG_MAP }}#$CONJUR_CONFIG_MAP#g" |
     sed -e "s#{{ CONJUR_MASTER_HOST_NAME }}#$CONJUR_MASTER_HOST_NAME#g" |
     sed -e "s#{{ CONJUR_MASTER_HOST_IP }}#$CONJUR_MASTER_HOST_IP#g" |
     sed -e "s#{{ CONJUR_MASTER_PORT }}#$CONJUR_MASTER_PORT#g" |
     sed -e "s#{{ CONJUR_SEED_FETCHER_IMAGE }}#$seed_fetcher_image#g" |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-    sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#${CONJUR_FOLLOWER_COUNT}#g" |
-    $CLI create -f -
+    sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#${CONJUR_FOLLOWER_COUNT}#g" \
+    > ./deploy-configs/conjur-follower-$FOLLOWER_NAMESPACE_NAME.yaml
 
-    echo "Creating passthrough route for conjur-follower service."
-    $CLI create route passthrough --service=conjur-follower
+  $CLI create -f ./deploy-configs/conjur-follower-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  echo "Creating passthrough route for conjur-follower service."
+  $CLI create route passthrough --service=conjur-follower
 }
 
 main $@

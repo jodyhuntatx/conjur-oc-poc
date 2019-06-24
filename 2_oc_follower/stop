@@ -22,6 +22,9 @@ $CLI delete route conjur-follower --force=true
 echo "Deleting cluster role."
 $CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
 
+echo "Deleting instantiated deployment yaml."
+rm ./deploy-configs/*.yaml
+
 echo "Waiting for Conjur pods to terminate..."
 while [[ "$($CLI get pods -l app=conjur-follower 2>&1)" != "No resources found." ]]; do
   echo -n '.'

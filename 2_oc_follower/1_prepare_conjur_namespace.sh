@@ -4,7 +4,7 @@ set -euo pipefail
 # This scripts requires running w/ cluster admin privileges
 
 source ../config/cluster.config
-source ../config/openshift.config
+source ../config/$PLATFORM.config
 source ../config/utils.sh
 
 main() {
@@ -39,8 +39,10 @@ create_service_account() {
 create_cluster_role() {
   $CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
 
-  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" ./deploy-configs/conjur-authenticator-role.yaml > ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
-    $CLI apply -f ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
+  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" ./deploy-configs/templates/conjur-authenticator-role.template.yaml \
+    > ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  $CLI apply -f ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
 }
 
 configure_oc_rbac() {

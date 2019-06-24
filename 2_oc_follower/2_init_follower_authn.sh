@@ -50,10 +50,10 @@ apply_manifest() {
   echo "Applying manifest in cluster..."
 
   sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" \
-     ./deploy-configs/conjur-follower-authn.template.yaml \
-    > ./deploy-configs/conjur-follower-authn.yaml
+     ./deploy-configs/templates/conjur-follower-authn.template.yaml  \
+     > ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
 
-  $CLI apply -f ./deploy-configs/conjur-follower-authn.yaml
+  $CLI apply -f ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
 
   echo "Manifest applied."
 }

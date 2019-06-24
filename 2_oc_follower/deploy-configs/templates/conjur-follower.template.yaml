@@ -44,22 +44,14 @@ spec:
         image: {{ CONJUR_SEED_FETCHER_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
-          - name: CONJUR_SEED_FILE_URL
-            value: {{ CONJUR_SEED_FILE_URL }}
-          - name: SEEDFILE_DIR
-            value: /tmp/seedfile
+
+        # hardcoded values
           - name: FOLLOWER_HOSTNAME
             value: conjur-follower # this should be the same value as the service name
-          - name: AUTHENTICATOR_ID
-            value: {{ AUTHENTICATOR_ID }}
-          - name: CONJUR_ACCOUNT
-            value: {{ CONJUR_ACCOUNT }}
-          - name: CONJUR_SSL_CERTIFICATE
-            valueFrom:
-              configMapKeyRef:
-                name: server-certificate
-                key: ssl-certificate
+          - name: SEEDFILE_DIR
+            value: /tmp/seedfile
 
+        # values from metaadata
           - name: MY_POD_NAME
             valueFrom:
               fieldRef:
@@ -72,8 +64,34 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
+
+        # values from Conjur config map
+          - name: CONJUR_SEED_FILE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: conjur-seed-file-url
+          - name: AUTHENTICATOR_ID
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: authenticator-id
+          - name: CONJUR_ACCOUNT
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: conjur-account
+          - name: CONJUR_SSL_CERTIFICATE
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: master-certificate
           - name: CONJUR_AUTHN_LOGIN
-            value: "{{ CONJUR_AUTHN_LOGIN_PREFIX }}/conjur-cluster"
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: conjur-authn-login-cluster
+
         volumeMounts:
           - name: seedfile
             mountPath: /tmp/seedfile
@@ -88,10 +106,13 @@ spec:
         env:
           - name: CONJUR_MASTER_PORT
             value: "{{ CONJUR_MASTER_PORT }}"
-          - name: CONJUR_AUTHENTICATORS
-            value: authn-k8s/{{ AUTHENTICATOR_ID }}
           - name: SEEDFILE_DIR
             value: /tmp/seedfile
+          - name: CONJUR_AUTHENTICATORS
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONJUR_CONFIG_MAP }}
+                key: conjur-authenticators
         resources:
           requests:
             cpu: "1"
