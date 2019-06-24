@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash 
 
 # NOTE: ==>> REQUIRES "exec" ACCESS TO CONJUR MASTER <<==
 

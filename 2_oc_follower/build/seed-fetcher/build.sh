@@ -11,5 +11,5 @@ docker cp authenticator:/bin/authenticator .
 docker stop authenticator
 docker rm authenticator
 
-docker build -t seed-fetcher:$CONJUR_NAMESPACE_NAME .
+docker build -t seed-fetcher:$FOLLOWER_NAMESPACE_NAME .
 rm authenticator

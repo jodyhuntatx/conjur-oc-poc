@@ -6,7 +6,7 @@ source ../config/openshift.config
 source ../config/utils.sh
 
 main() {
-  set_namespace $CONJUR_NAMESPACE_NAME
+  set_namespace $FOLLOWER_NAMESPACE_NAME
   announce "Configuring followers."
   configure_followers
   initialize_config_map

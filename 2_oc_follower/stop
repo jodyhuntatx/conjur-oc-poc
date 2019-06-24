@@ -4,8 +4,8 @@ source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
 
-oc login -u $OSHIFT_CLUSTER_ADMIN_USERNAME
-set_namespace $CONJUR_NAMESPACE_NAME
+oc login -u $CLUSTER_ADMIN_USERNAME
+set_namespace $FOLLOWER_NAMESPACE_NAME
 
 announce "Deleting Conjur deployments"
 
@@ -20,7 +20,7 @@ echo "Deleting Route to Follower service."
 $CLI delete route conjur-follower --force=true
 
 echo "Deleting cluster role."
-$CLI delete --ignore-not-found clusterrole conjur-authenticator-$CONJUR_NAMESPACE_NAME
+$CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
 
 echo "Waiting for Conjur pods to terminate..."
 while [[ "$($CLI get pods -l app=conjur-follower 2>&1)" != "No resources found." ]]; do

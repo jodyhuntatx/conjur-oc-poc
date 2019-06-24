@@ -22,7 +22,7 @@
 
   - &follower_service_accounts
     - !host
-      id: apps/{{ CONJUR_NAMESPACE_NAME }}/service_account/{{ CONJUR_SERVICEACCOUNT_NAME }}
+      id: apps/{{ FOLLOWER_NAMESPACE_NAME }}/service_account/{{ CONJUR_SERVICEACCOUNT_NAME }}
       annotations:
         kubernetes/authentication-container-name: authenticator
         kubernetes: "true"
