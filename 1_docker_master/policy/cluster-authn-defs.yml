@@ -22,7 +22,7 @@
 
   - &follower_service_accounts
     - !host
-      id: apps/conjur/service_account/conjur-cluster
+      id: apps/cyberark/service_account/conjur-cluster
       annotations:
         kubernetes/authentication-container-name: authenticator
         kubernetes: "true"

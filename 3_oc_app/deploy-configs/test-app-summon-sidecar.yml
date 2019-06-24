@@ -20,36 +20,60 @@ spec:
         app: test-app-summon-sidecar
     spec:
       serviceAccountName: oc-test-app-summon-sidecar
+
+      # Use hostAliases to bypass DNS
       hostAliases:
       - ip: "{{ CONJUR_MASTER_HOST_IP }}"
         hostnames:
         - "{{ CONJUR_MASTER_HOST_NAME }}"
+
       containers:
+
+      # Application container
       - image: {{ TEST_APP_DOCKER_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         name: test-app
         env:
+
+        # values from Conjur config map
           - name: CONJUR_APPLIANCE_URL
-            value: "{{ CONJUR_APPLIANCE_URL }}"
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-appliance-url
           - name: CONJUR_ACCOUNT
-            value: {{ CONJUR_ACCOUNT }}
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-account
           - name: CONJUR_SSL_CERTIFICATE
             valueFrom:
               configMapKeyRef:
                 name: {{ CONFIG_MAP_NAME }}
-                key: ssl-certificate
+                key: follower-certificate
           - name: CONJUR_AUTHN_TOKEN_FILE
-            value: /run/conjur/access-token
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-authn-token-file
           - name: CONJUR_VERSION
-            value: "{{ CONJUR_VERSION }}"
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-version
+
         volumeMounts:
           - mountPath: /run/conjur
             name: conjur-access-token
             readOnly: true
+
+      # Authenticator client container
       - image: {{ AUTHENTICATOR_CLIENT_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         name: authenticator
         env:
+
+        # values from cluster metadata
           - name: MY_POD_NAME
             valueFrom:
               fieldRef:
@@ -62,24 +86,45 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
+
+        # values from Conjur config map
           - name: CONJUR_VERSION
-            value: '{{ CONJUR_VERSION }}'
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-version
           - name: CONJUR_APPLIANCE_URL
-            value: "{{ CONJUR_APPLIANCE_URL }}"
-          - name: CONJUR_AUTHN_URL
-            value: "{{ CONJUR_AUTHN_URL }}"
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-appliance-url
           - name: CONJUR_ACCOUNT
-            value: {{ CONJUR_ACCOUNT }}
-          - name: CONJUR_AUTHN_LOGIN
-            value: "{{ CONJUR_AUTHN_LOGIN_PREFIX }}/oc-test-app-summon-sidecar"
+            valueFrom:
+              configMapKeyRef:
+                name: {{ CONFIG_MAP_NAME }}
+                key: conjur-account
           - name: CONJUR_SSL_CERTIFICATE
             valueFrom:
               configMapKeyRef:
                 name: {{ CONFIG_MAP_NAME }}
-                key: ssl-certificate
+                key: follower-certificate
+
+        # values from app config map
+          - name: CONJUR_AUTHN_URL
+            valueFrom:
+              configMapKeyRef:
+                name: {{ APP_CONFIG_MAP_NAME }}
+                key: conjur-authn-url
+          - name: CONJUR_AUTHN_LOGIN
+            valueFrom:
+              configMapKeyRef:
+                name: {{ APP_CONFIG_MAP_NAME }}
+                key: conjur-authn-login-sidecar
+
         volumeMounts:
           - mountPath: /run/conjur
             name: conjur-access-token
+
       imagePullSecrets:
         - name: dockerpullsecret
       volumes:

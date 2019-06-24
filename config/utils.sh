@@ -18,7 +18,7 @@ announce() {
 }
 
 conjur_image() {
-  echo "$DOCKER_REGISTRY_PATH/$CONJUR_NAMESPACE_NAME/$1:$CONJUR_NAMESPACE_NAME"
+  echo "$DOCKER_REGISTRY_PATH/$FOLLOWER_NAMESPACE_NAME/$1:$FOLLOWER_NAMESPACE_NAME"
 }
 
 app_image() {
@@ -104,7 +104,7 @@ wait_for_it() {
 }
 
 rotate_api_key() {
-  set_namespace $CONJUR_NAMESPACE_NAME
+  set_namespace $FOLLOWER_NAMESPACE_NAME
 
   master_pod_name=$(get_master_pod_name)
 

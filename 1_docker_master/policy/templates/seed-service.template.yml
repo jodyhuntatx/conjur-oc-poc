@@ -24,4 +24,4 @@
 # Give followers permission to consume seeds
 - !grant
   role: !layer conjur/seed-generation/consumers
-  member: !host conjur/authn-k8s/{{ AUTHENTICATOR_ID }}/apps/{{ CONJUR_NAMESPACE_NAME }}/service_account/{{ CONJUR_SERVICEACCOUNT_NAME }}
+  member: !host conjur/authn-k8s/{{ AUTHENTICATOR_ID }}/apps/{{ FOLLOWER_NAMESPACE_NAME }}/service_account/{{ CONJUR_SERVICEACCOUNT_NAME }}
