@@ -1,7 +1,7 @@
 #!/bin/bash 
 set -euo pipefail
 
-# This scripts requires running w/ cluster admin privileges
+# This script requires running w/ cluster admin privileges
 
 source ../config/cluster.config
 source ../config/$PLATFORM.config
@@ -49,6 +49,7 @@ configure_oc_rbac() {
   echo "Configuring OpenShift admin permissions."
   
   # allow pods with conjur-cluster serviceaccount to run as root
+
   oc adm policy add-scc-to-user anyuid "system:serviceaccount:$FOLLOWER_NAMESPACE_NAME:$CONJUR_SERVICEACCOUNT_NAME"
 
   # add permissions for Follower admin user on registry, default namespace & Follower namespaces

@@ -35,7 +35,8 @@ prepare_seed_fetcher_image() {
   fi
 
   seed_fetcher_image=$(conjur_image seed-fetcher)
-  docker tag seed-fetcher:$FOLLOWER_NAMESPACE_NAME $seed_fetcher_image
+
+  docker tag seed-fetcher:latest $seed_fetcher_image
 
   if ! is_minienv; then
     docker push $seed_fetcher_image
