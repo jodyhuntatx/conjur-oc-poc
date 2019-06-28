@@ -6,7 +6,7 @@ source ../config/openshift.config
 source ../config/utils.sh
 
 main() {
-  set_namespace $CONJUR_NAMESPACE_NAME
+  set_namespace $FOLLOWER_NAMESPACE_NAME
 
   print_cluster_info
 }
@@ -14,10 +14,10 @@ main() {
 #######################
 print_cluster_info() {
 
-  conjur_master_route=$($cli get routes | grep conjur-master | awk '{ print $2 }')
+  conjur_master_route=$($CLI get routes | grep conjur-master | awk '{ print $2 }')
   master_url=https://$conjur_master_route
 
-  conjur_follower_route=$($cli get routes | grep conjur-follower | awk '{ print $2 }')
+  conjur_follower_route=$($CLI get routes | grep conjur-follower | awk '{ print $2 }')
   follower_url=https://$conjur_follower_route
 
   password=$CONJUR_ADMIN_PASSWORD

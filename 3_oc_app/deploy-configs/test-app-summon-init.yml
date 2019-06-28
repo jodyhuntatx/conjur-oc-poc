@@ -40,7 +40,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: {{ CONFIG_MAP_NAME }}
-                key: conjur-appliance-url
+                key: conjur-follower-url
           - name: CONJUR_ACCOUNT
             valueFrom:
               configMapKeyRef:
@@ -103,7 +103,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: {{ CONFIG_MAP_NAME }}
-                key: conjur-appliance-url
+                key: conjur-follower-url
           - name: CONJUR_ACCOUNT
             valueFrom:
               configMapKeyRef:

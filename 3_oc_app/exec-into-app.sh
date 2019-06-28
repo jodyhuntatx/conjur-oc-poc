@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CLI=oc
+
 if [[ $# != 1 ]]; then
   echo "specify 'init' or 'side'"
   exit -1
@@ -10,5 +12,5 @@ source ../config/openshift.config
 source ../config/utils.sh
 
 set_namespace $TEST_APP_NAMESPACE_NAME
-app_pod=$($cli get pods | grep $1 | awk '{print $1}')
-$cli exec -it $app_pod -- bash
+app_pod=$($CLI get pods | grep $1 | awk '{print $1}')
+$CLI exec -it $app_pod -- bash

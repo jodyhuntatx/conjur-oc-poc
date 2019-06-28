@@ -1,12 +1,12 @@
-#!/bin/bash 
+#!/bin/bash
 set -eo pipefail
 
 source ../config/cluster.config
-source ../config/openshift.config
+source ../config/$PLATFORM.config
 source ../config/utils.sh
 
 main() {
-  set_namespace $CONJUR_NAMESPACE_NAME
+  set_namespace $FOLLOWER_NAMESPACE_NAME
 
   docker_login
 
@@ -24,52 +24,44 @@ main() {
 docker_login() {
   announce "Creating image pull secret."
     
-  $cli delete --ignore-not-found secrets dockerpullsecret
+  $CLI delete --ignore-not-found secrets dockerpullsecret
     
-  $cli secrets new-dockercfg dockerpullsecret \
+  $CLI secrets new-dockercfg dockerpullsecret \
          --docker-server=${DOCKER_REGISTRY_PATH} \
          --docker-username=_ \
-         --docker-password=$($cli whoami -t) \
+         --docker-password=$($CLI whoami -t) \
          --docker-email=_
     
-  $cli secrets add serviceaccount/conjur-cluster secrets/dockerpullsecret --for=pull
+  $CLI secrets add serviceaccount/conjur-cluster secrets/dockerpullsecret --for=pull
 }
 
 ######################
 deploy_conjur_master_cluster() {
   announce "Deploying Conjur Master cluster pods."
 
-  conjur_appliance_image=$(platform_image "conjur-appliance")
+  conjur_appliance_image=$(conjur_image "conjur-appliance")
 
   sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" "./deploy-configs/conjur-master.yaml" |
       sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
       sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-      $cli create -f -
-
-  # turn of IPV6 listening in Master
-  docker exec $CONJUR_MASTER_CONTAINER_NAME \
-        sed -i 's/^.*\[\:\:\]\:80\;/  listen 127.0.0.1:80\;/' /etc/nginx/sites-enabled/conjur
-  docker exec $CONJUR_MASTER_CONTAINER_NAME \
-        sed -i 's/^.*\[\:\:1\]\:80\;//' /etc/nginx/sites-enabled/conjur
-  docker exec $CONJUR_MASTER_CONTAINER_NAME \
-        sed -i 's/^.*\[.*443.*//' /etc/conjur/nginx.d/00_ssl_port.conf
+      $CLI create -f -
 
 }
 
 ######################
 deploy_conjur_cli() {
   announce "Deploying Conjur CLI pod."
-  cli_app_image=$(platform_image conjur-cli)
+  cli_app_image=$(conjur_image conjur-cli)
   sed -e "s#{{ DOCKER_IMAGE }}#$cli_app_image#g" ./deploy-configs/conjur-cli.yml |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-    $cli create -f -
+    $CLI create -f -
 }
 
 ######################
 wait_for_conjur() {
   echo "Waiting for Conjur pods to launch..."
   conjur_pod_count=1
-  wait_for_it 300 "$cli describe po conjur-master | grep Status: | grep -c Running | grep -q $conjur_pod_count"
+  wait_for_it 300 "$CLI describe po conjur-master | grep Status: | grep -c Running | grep -q $conjur_pod_count"
 }
 
 main "$@"

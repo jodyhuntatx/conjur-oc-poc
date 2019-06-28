@@ -11,7 +11,5 @@ docker cp authenticator:/bin/authenticator .
 docker stop authenticator
 docker rm authenticator
 
-
 docker build -t seed-fetcher:latest .
-
 rm authenticator

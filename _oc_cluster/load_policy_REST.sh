@@ -3,10 +3,8 @@
 source ../config/cluster.config
 CLI=oc
 
-# When Conjur Master is in cluster - set URL to Master route
-if $CONJUR_MASTER_IN_CLUSTER; then
-  export CONJUR_APPLIANCE_URL="https://$($CLI get routes -n $FOLLOWER_NAMESPACE_NAME | grep conjur-master | awk '{ print $2 }')"
-fi
+# override value to Master route in cluster
+CONJUR_APPLIANCE_URL="https://$($CLI get routes -n $FOLLOWER_NAMESPACE_NAME | grep conjur-master | awk '{ print $2 }')"
 
 # Authenticates as admin user and loads policy file 
 

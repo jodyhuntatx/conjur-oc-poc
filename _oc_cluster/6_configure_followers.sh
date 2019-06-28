@@ -6,11 +6,11 @@ source ../config/openshift.config
 source ../config/utils.sh
 
 main() {
-  set_namespace $CONJUR_NAMESPACE_NAME
+  set_namespace $FOLLOWER_NAMESPACE_NAME
 
   announce "Configuring followers."
 
-  seed_dir="tmp-$CONJUR_NAMESPACE_NAME"
+  seed_dir="tmp-$FOLLOWER_NAMESPACE_NAME"
   prepare_follower_seed
 
   configure_followers
@@ -30,11 +30,11 @@ prepare_follower_seed() {
 
   FOLLOWER_SEED_PATH="./$seed_dir/follower-seed.tar"
 
-  $cli exec $master_pod_name evoke seed follower conjur-follower > $FOLLOWER_SEED_PATH
+  $CLI exec $master_pod_name evoke seed follower conjur-follower > $FOLLOWER_SEED_PATH
 }
 
 configure_followers() {
-  pod_list=$($cli get pods -l role=follower --no-headers | awk '{ print $1 }')
+  pod_list=$($CLI get pods -l role=follower --no-headers | awk '{ print $1 }')
   
   for pod_name in $pod_list; do
     configure_follower $pod_name &
@@ -50,8 +50,9 @@ configure_follower() {
 
   copy_file_to_container $FOLLOWER_SEED_PATH "/tmp/follower-seed.tar" "$pod_name"
 
-  $cli exec $pod_name -- evoke unpack seed /tmp/follower-seed.tar
-  $cli exec $pod_name -- evoke configure follower
+  $CLI exec $pod_name -- evoke unpack seed /tmp/follower-seed.tar
+  $CLI exec $pod_name -- evoke configure follower
+  $CLI exec $pod_name -- cat /opt/conjur/etc/ssl/conjur-follower.pem > $FOLLOWER_CERT_FILE
 }
 
 delete_follower_seed() {
