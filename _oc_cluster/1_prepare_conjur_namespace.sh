@@ -9,18 +9,16 @@ source ../config/utils.sh
 
 main() {
   set_namespace default
-
-  create_conjur_namespace
+  initialize_namespace
   create_service_account
   create_cluster_role
-
   configure_oc_rbac
 }
 
-##################
-create_conjur_namespace() {
-  announce "Creating Conjur namespace."
-  
+###################################
+initialize_namespace() {
+  announce "Creating Follower namespace."
+
   if has_namespace "$FOLLOWER_NAMESPACE_NAME"; then
     echo "Namespace '$FOLLOWER_NAMESPACE_NAME' exists, not going to create it."
     set_namespace $FOLLOWER_NAMESPACE_NAME
@@ -31,10 +29,8 @@ create_conjur_namespace() {
   fi
 }
 
-##################
+###################################
 create_service_account() {
-    readonly CONJUR_SERVICEACCOUNT_NAME='conjur-cluster'
-
     if has_serviceaccount $CONJUR_SERVICEACCOUNT_NAME; then
         echo "Service account '$CONJUR_SERVICEACCOUNT_NAME' exists, not going to create it."
     else
@@ -42,12 +38,14 @@ create_service_account() {
     fi
 }
 
-##################
+###################################
 create_cluster_role() {
   $CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
 
-  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" ./deploy-configs/conjur-authenticator-role.yaml |
-    $CLI apply -f -
+  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" ./deploy-configs/templates/conjur-authenticator-role.template.yaml \
+    > ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  $CLI apply -f ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
 }
 
 ##################
@@ -60,6 +58,7 @@ configure_oc_rbac() {
   # add permissions for Conjur admin user on registry, default & Conjur cluster namespaces
   oc adm policy add-role-to-user system:registry $FOLLOWER_ADMIN_USERNAME
   oc adm policy add-role-to-user system:image-builder $FOLLOWER_ADMIN_USERNAME
+  oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n default
   oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n $FOLLOWER_NAMESPACE_NAME
 
 }

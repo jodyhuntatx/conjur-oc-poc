@@ -15,6 +15,7 @@ main() {
   configure_oc_rbac
 }
 
+###################################
 create_conjur_namespace() {
   announce "Creating Follower namespace."
   
@@ -28,6 +29,7 @@ create_conjur_namespace() {
   fi
 }
 
+###################################
 create_service_account() {
     if has_serviceaccount $CONJUR_SERVICEACCOUNT_NAME; then
         echo "Service account '$CONJUR_SERVICEACCOUNT_NAME' exists, not going to create it."
@@ -36,6 +38,7 @@ create_service_account() {
     fi
 }
 
+###################################
 create_cluster_role() {
   $CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
 
@@ -45,6 +48,7 @@ create_cluster_role() {
   $CLI apply -f ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
 }
 
+###################################
 configure_oc_rbac() {
   echo "Configuring OpenShift admin permissions."
   

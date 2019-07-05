@@ -5,7 +5,9 @@ CLI=oc
 
 # When Conjur Master is in cluster - set URL to Master route
 if $CONJUR_MASTER_IN_CLUSTER; then
-  export CONJUR_APPLIANCE_URL="https://$($CLI get routes -n $FOLLOWER_NAMESPACE_NAME | grep conjur-master | awk '{ print $2 }')"
+  CONJUR_APPLIANCE_URL="https://$($CLI get routes -n $FOLLOWER_NAMESPACE_NAME | grep conjur-master | awk '{ print $2 }')"
+else
+  CONJUR_APPLIANCE_URL="https://$CONJUR_MASTER_HOST_NAME:$CONJUR_MASTER_PORT"
 fi
 
 # Authenticates as admin user and loads policy file 

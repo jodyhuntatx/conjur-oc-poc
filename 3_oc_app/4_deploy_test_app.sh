@@ -39,16 +39,15 @@ init_registry_creds() {
 ###########################
 init_connection_specs() {
 
-  test_sidecar_app_docker_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-sidecar-app:$TEST_APP_NAMESPACE_NAME"
-  test_init_app_docker_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/test-init-app:$TEST_APP_NAMESPACE_NAME"
-  authenticator_client_image="$DOCKER_REGISTRY_PATH/$TEST_APP_NAMESPACE_NAME/conjur-authn-k8s-client:$TEST_APP_NAMESPACE_NAME"
+  test_sidecar_app_docker_image="$(app_image test-sidecar-app)"
+  test_init_app_docker_image="$(app_image test-init-app)"
+  authenticator_client_image="$(app_image conjur-authn-k8s-client)"
 
-  # Set authn URL to either:
-  #  - Follower service in cluster, or
-  #  - Follower running on master host
-
+  # If Followers are deployed in the cluster:
+  #  - authenticate to Follower service in cluster
+  #  - else authenticate to Follower running on master host
   if $CONJUR_FOLLOWERS_IN_CLUSTER; then
-    conjur_appliance_url=https://conjur-follower.$FOLLOWER_NAMESPACE_NAME.svc.cluster.local/api
+    conjur_appliance_url=https://$CONJUR_FOLLOWER_SERVICE_NAME
   else
     conjur_appliance_url=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_FOLLOWER_PORT
   fi

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Master not running in cluster
+CONJUR_APPLIANCE_URL="https://$CONJUR_MASTER_HOST_NAME:$CONJUR_MASTER_PORT"
+
 if [[ $# -ne 2 ]] ; then
   echo "Usage: $0 <variable-name> <variable-value>"
   exit -1
@@ -8,6 +11,7 @@ fi
 if [[ "$PLATFORM" == "" ]]; then
   source ../config/cluster.config
 fi
+
 
 # Authenticates as admin user and sets value of a specified variable
 

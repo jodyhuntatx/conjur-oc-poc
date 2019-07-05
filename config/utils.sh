@@ -68,41 +68,28 @@ set_namespace() {
   $CLI config set-context $($CLI config current-context) --namespace="$1" > /dev/null
 }
 
-wait_for_node() {
-  wait_for_it -1 "$CLI describe pod $1 | grep Status: | grep -q Running"
+######################
+wait_for_running_pod() {
+  local pod_name=$1; shift
+  # until there's at least one pod with that substring in its name that's Running
+  until [ "" != "$($CLI get pods --no-headers | grep $pod_name | grep Running)" ]; do
+    echo -n '.'
+    sleep 2
+  done
+  echo
 }
 
-wait_for_service() {
-  wait_for_it -1 "$CLI get service $1 --no-headers | grep -q -v pending"
+wait_for_service_200() {
+  local service_url=$1; shift
+  # until the service returns HTTP 200
+  until [ 200 == $(curl -sk -o /dev/null -w "%{http_code}" $service_url) ]; do
+    echo -n '.'
+    sleep 2
+  done
+  echo
 }
 
-wait_for_it() {
-  local timeout=$1
-  local spacer=2
-  shift
-
-  if ! [ $timeout = '-1' ]; then
-    local times_to_run=$((timeout / spacer))
-
-    echo "Waiting for '$@' up to $timeout s"
-    for i in $(seq $times_to_run); do
-      eval $@ && echo 'Success!' && break
-      echo -n .
-      sleep $spacer
-    done
-
-    eval $@
-  else
-    echo "Waiting for '$@' forever"
-
-    while ! eval $@; do
-      echo -n .
-      sleep $spacer
-    done
-    echo 'Success!'
-  fi
-}
-
+######################
 rotate_api_key() {
   set_namespace $FOLLOWER_NAMESPACE_NAME
 
@@ -115,6 +102,7 @@ rotate_api_key() {
   echo $api_key
 }
 
+######################
 function is_minienv() {
   $THIS_IS_MINIKUBE
 }

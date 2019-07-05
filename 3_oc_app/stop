@@ -14,6 +14,8 @@ announce "Deleting test app/sidecar deployment."
 $CLI delete dc/test-app-summon-sidecar
 $CLI delete dc/test-app-summon-init
 
+$CLI delete rolebinding test-app-conjur-authenticator-role-binding
+
 echo "Waiting for pods to terminate"
 until [[ "$($CLI get pods 2>&1)" == "No resources found." ]]; do
   sleep 4

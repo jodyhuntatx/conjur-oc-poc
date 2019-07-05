@@ -11,7 +11,7 @@ spec:
     name: https
   selector:
     app: conjur-follower
-  type: LoadBalancer
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: DeploymentConfig
@@ -27,10 +27,6 @@ spec:
         role: follower
     spec:
       serviceAccountName: conjur-cluster
-      hostAliases:
-      - ip: "{{ CONJUR_MASTER_HOST_IP }}"
-        hostnames:
-        - "{{ CONJUR_MASTER_HOST_NAME }}"
       volumes:
       - name: seedfile
         emptyDir:
@@ -41,8 +37,8 @@ spec:
 
       initContainers:
       - name: authenticator
-        image: {{ CONJUR_SEED_FETCHER_IMAGE }}
-        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        image: 172.30.1.1:5000/cyberark/seed-fetcher:cyberark
+        imagePullPolicy: 
         env:
 
         # hardcoded values
@@ -69,27 +65,27 @@ spec:
           - name: CONJUR_SEED_FILE_URL
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: conjur-seed-file-url
           - name: AUTHENTICATOR_ID
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: authenticator-id
           - name: CONJUR_ACCOUNT
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: conjur-account
           - name: CONJUR_SSL_CERTIFICATE
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: master-certificate
           - name: CONJUR_AUTHN_LOGIN
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: conjur-authn-login-cluster
 
         volumeMounts:
@@ -100,18 +96,18 @@ spec:
 
       containers:
       - name: conjur-appliance
-        command: ["/tmp/seedfile/start-follower-docker-master.sh"]
-        image: {{ CONJUR_APPLIANCE_IMAGE }}
-        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        command: ["/tmp/seedfile/start-follower-oc-master.sh"]
+        image: 172.30.1.1:5000/cyberark/conjur-appliance:cyberark
+        imagePullPolicy: 
         env:
           - name: CONJUR_MASTER_PORT
-            value: "{{ CONJUR_MASTER_PORT }}"
+            value: "30443"
           - name: SEEDFILE_DIR
             value: /tmp/seedfile
           - name: CONJUR_AUTHENTICATORS
             valueFrom:
               configMapKeyRef:
-                name: {{ CONJUR_CONFIG_MAP }}
+                name: conjur-config
                 key: conjur-authenticators
         resources:
           requests:

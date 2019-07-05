@@ -2,38 +2,46 @@
 #set -eo pipefail
 
 source ../config/cluster.config
-source ../config/openshift.config
+source ../config/$PLATFORM.config
 source ../config/utils.sh
 
 announce "Deleting Conjur cluster."
 
+$CLI login -u $CLUSTER_ADMIN_USERNAME
+
 set_namespace $FOLLOWER_NAMESPACE_NAME
 
-conjur_appliance_image=$(platform_image "conjur-appliance")
-
-announce "Deleting Master cluster pods."
-conjur_cluster_template="./deploy-configs/conjur-master.yaml"
-sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" $conjur_cluster_template |
-  sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-  $CLI delete --ignore-not-found -f -
-
-announce "Deleting Follower cluster pods."
-conjur_cluster_template="./deploy-configs/conjur-follower.yaml"
-sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" $conjur_cluster_template |
-  sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-  sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#$CONJUR_FOLLOWER_COUNT#g" |
-  $CLI delete --ignore-not-found -f -
-
-announce "Deleting CLI pod."
+echo "Deleting CLI pod."
 $CLI delete --ignore-not-found deploy/conjur-cli
 
-announce "Deleting Master route."
+echo "Deleting Master cluster pods."
+$CLI delete pod/conjur-master-node --force=true
+$CLI delete svc/conjur-master --force=true
+
+echo "Deleting Follower pods."
+$CLI delete dc/conjur-follower --force=true
+$CLI delete svc/conjur-follower --force=true
+
+echo "Deleting Conjur config map."
+$CLI delete --ignore-not-found cm $CONJUR_CONFIG_MAP
+
+echo "Deleting Route to Follower service."
+$CLI delete route conjur-follower --force=true
+
+echo "Deleting cluster role."
+$CLI delete --ignore-not-found clusterrole conjur-authenticator
+$CLI delete --ignore-not-found sa conjur conjur-cluster
+
+echo "Deleting Master route."
 conjur_master_route=$($CLI get routes | grep -s conjur-master | awk '{ print $3 }')
 $CLI delete --ignore-not-found route $conjur_master_route
 
-announce "Deleting Follower route."
+echo "Deleting Follower route."
 conjur_follower_route=$($CLI get routes | grep -s conjur-follower | awk '{ print $3 }')
 $CLI delete --ignore-not-found route $conjur_follower_route
+
+echo "Deleting instantiated deployment yaml."
+rm ./deploy-configs/*.yaml
 
 echo "Waiting for Conjur pods to terminate..."
 while [[ "$($CLI get pods 2>&1)" != "No resources found." ]]; do
@@ -42,4 +50,4 @@ while [[ "$($CLI get pods 2>&1)" != "No resources found." ]]; do
 done 
 echo
 
-echo "Cluster deleted."
+announce "Cluster deleted."

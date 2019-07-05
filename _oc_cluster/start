@@ -5,6 +5,11 @@ source ../config/cluster.config
 source ../config/openshift.config
 source ../config/utils.sh
 
+if ! $CONJUR_MASTER_IN_CLUSTER; then
+  echo "These scripts require CONJUR_MASTER_IN_CLUSTER be set \"true\" in ../cluster.config"
+  exit -1
+fi
+
 oc login -u $CLUSTER_ADMIN_USERNAME
 ./0_check_dependencies.sh
 ./stop
@@ -14,11 +19,12 @@ $CLI login -u $FOLLOWER_ADMIN_USERNAME
 
 ./2_prepare_docker_images.sh
 ./3_deploy_master.sh
-./4_deploy_conjur_followers.sh
-./5_configure_master.sh
-./6_configure_followers.sh
 
-./2_init_follower_authn.sh
+oc login -u $CLUSTER_ADMIN_USERNAME
+./4_init_follower_authn.sh
 
-./7_print_cluster_info.sh
+$CLI login -u $FOLLOWER_ADMIN_USERNAME
+./5_deploy_conjur_followers.sh
+
+./6_print_cluster_info.sh
 ./exec-into-cli.sh

@@ -10,9 +10,11 @@ ENV CONJUR_VERSION=5 \
 
 COPY authenticator \
      get-seedfile.sh \
-     start-follower.sh /usr/bin/
+     start-follower-docker-master.sh \
+     start-follower-oc-master.sh /usr/bin/
 
 RUN chmod +x /usr/bin/get-seedfile.sh \
-             /usr/bin/start-follower.sh
+             /usr/bin/start-follower-docker-master.sh \
+             /usr/bin/start-follower-oc-master.sh
 
 CMD ["get-seedfile.sh"]

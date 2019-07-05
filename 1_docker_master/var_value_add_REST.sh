@@ -2,6 +2,8 @@
 
 source ../config/cluster.config
 
+export CONJUR_APPLIANCE_URL=https://$CONJUR_MASTER_HOST_NAME:$CONJUR_MASTER_PORT
+
 # Authenticates as admin user and sets value of a specified variable
 
 AUTHN_USERNAME=admin

@@ -3,6 +3,11 @@
 source ../config/cluster.config
 source ../config/$PLATFORM.config
 
+if $CONJUR_MASTER_IN_CLUSTER; then
+  echo "These scripts require CONJUR_MASTER_IN_CLUSTER be \"false\""
+  exit -1
+fi
+
 # This script deletes running instances and brings up 
 #   initialized Conjur Master, Follower & CLI nodes.
 #   It loads a simple demo policy and leaves the user
@@ -83,9 +88,13 @@ cli_up() {
     $CLI_IMAGE_NAME \
     -c "sleep infinity"
 
+  sleep 5
+
   # Initialize connection to service (create .conjurrc and conjur-xx.pem cert)
   docker exec $CLI_CONTAINER_NAME \
-    bash -c "echo yes | conjur init -u $CONJUR_APPLIANCE_URL -a $CONJUR_ACCOUNT"
+    bash -c "echo yes | conjur init \
+	-u https://$CONJUR_MASTER_HOST_NAME:$CONJUR_MASTER_PORT \
+	-a $CONJUR_ACCOUNT"
 
   # Login as admin
   docker exec $CLI_CONTAINER_NAME \
@@ -133,7 +142,7 @@ initialize_ca() {
 
   docker exec $CONJUR_MASTER_CONTAINER_NAME \
     chpst -u conjur conjur-plugin-service possum \
-      rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"]
+      rake authn_k8s:ca_init["conjur/authn-k8s/$AUTHENTICATOR_ID"] >& /dev/null
 
   echo "CA initialized."
 }

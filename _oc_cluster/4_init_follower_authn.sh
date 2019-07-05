@@ -4,51 +4,33 @@ source ../config/cluster.config
 source ../config/$PLATFORM.config
 source ../config/utils.sh
 
-# This script requires running w/ cluster admin privileges
+# This script requires OpenShift/K8s cluster admin privileges
 
 #################
 main() {
   announce "Initializing Follower authentication."
 
-  initialize_conjur_config_map
+  whitelist_authenticators
   apply_manifest
   initialize_variables
 }
 
 ###################################
-initialize_conjur_config_map() {
-  echo "Creating Conjur config map." 
+whitelist_authenticators() {
+  echo "Updating list of whitelisted authenticators..."
 
-  $CLI delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
+  master_pod_name=$(get_master_pod_name)
 
-  # Get master URL
-  master_url="https://$($CLI get routes -n $FOLLOWER_NAMESPACE_NAME | grep conjur-master | awk '{ print $2 }')"
-  # Get master cert
-  # master_cert=$(./get_cert_REST.sh $CONJUR_MASTER_HOST_NAME $CONJUR_MASTER_PORT)
-  master_cert=$(cat "$MASTER_CERT_FILE")
+  $CLI exec $master_pod_name -- bash -c \
+    "echo CONJUR_AUTHENTICATORS=\"authn,authn-k8s/$AUTHENTICATOR_ID\" >> \
+      /opt/conjur/etc/conjur.conf && \
+        sv restart conjur"
 
-  # Get Follower URL
-  follower_url="https://$CONJUR_FOLLOWER_SERVICE_NAME"
-  # Get Follwer cert
-  # follower_cert=$(./get_cert_REST.sh $CONJUR_MASTER_HOST_NAME $CONJUR_FOLLOWER_PORT)
-  follower_cert=$(cat "$FOLLOWER_CERT_FILE")
+  echo "Waiting for Master service to come back up after restart."
+  conjur_master_route=$($CLI get routes | grep conjur-master | awk '{ print $2 }')
+  wait_for_service_200 "https://$conjur_master_route/health"
 
-  $CLI create configmap $CONJUR_CONFIG_MAP \
-	-n default \
-	--from-literal=follower-namespace-name="$FOLLOWER_NAMESPACE_NAME" \
-        --from-literal=conjur-master-url=$master_url \
-	--from-literal=master-certificate="$master_cert" \
-        --from-literal=conjur-follower-url=$follower_url \
-	--from-literal=follower-certificate="$follower_cert" \
-        --from-literal=conjur-account="$CONJUR_ACCOUNT" \
-        --from-literal=conjur-version="$CONJUR_VERSION" \
-        --from-literal=conjur-authenticators="$CONJUR_AUTHENTICATORS" \
-        --from-literal=authenticator-id="$AUTHENTICATOR_ID" \
-        --from-literal=conjur-seed-file-url="$CONJUR_SEED_FILE_URL" \
-        --from-literal=conjur-authn-token-file="/run/conjur/access-token" \
-        --from-literal=conjur-authn-login-cluster="$CONJUR_CLUSTER_LOGIN"
-
-  echo "Conjur cert stored."
+  echo "Authenticators updated."
 }
 
 ###################################
@@ -98,8 +80,6 @@ initialize_variables() {
   ./var_value_add_REST.sh \
     conjur/authn-k8s/$AUTHENTICATOR_ID/kubernetes/api-url \
     "$($CLI config view --minify -o yaml | grep server | awk '{print $2}')"
-
-  echo "Variables initialized."
 }
 
 main "$@"

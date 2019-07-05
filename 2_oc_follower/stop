@@ -19,8 +19,11 @@ $CLI delete --ignore-not-found cm server-certificate
 echo "Deleting Route to Follower service."
 $CLI delete route conjur-follower --force=true
 
-echo "Deleting cluster role."
+echo "Deleting cluster roles, role bindings and service accounts."
 $CLI delete --ignore-not-found clusterrole conjur-authenticator-$FOLLOWER_NAMESPACE_NAME
+$CLI delete --ignore-not-found rolebinding conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME
+$CLI delete --ignore-not-found sa conjur
+$CLI delete --ignore-not-found sa conjur-cluster
 
 echo "Deleting instantiated deployment yaml."
 rm ./deploy-configs/*.yaml

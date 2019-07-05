@@ -42,4 +42,4 @@ prepare_seed_fetcher_image() {
   fi
 }
 
-main $@
+main "$@"

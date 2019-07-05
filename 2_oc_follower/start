@@ -11,8 +11,9 @@ oc login -u $CLUSTER_ADMIN_USERNAME
 ./1_prepare_conjur_namespace.sh
 ./2_init_follower_authn.sh
 
-oc login -u $FOLLOWER_ADMIN_USERNAME
-
-./3_prepare_docker_images.sh
-./4_deploy_conjur_followers.sh
-./_update_follower_cert.sh # regenerates follower cert w/ OC Route SAN added
+if $CONJUR_FOLLOWERS_IN_CLUSTER; then
+  $CLI login -u $FOLLOWER_ADMIN_USERNAME
+  ./3_prepare_docker_images.sh
+  ./4_deploy_conjur_followers.sh
+  ./_update_follower_cert.sh # regenerates follower cert w/ OC Route SAN added
+fi

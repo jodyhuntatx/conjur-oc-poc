@@ -6,13 +6,14 @@ source ../config/openshift.config
 source ../config/utils.sh
 
 main() {
+  announce "Deploying Followers..."
   set_namespace $FOLLOWER_NAMESPACE_NAME
   docker_login
 
-  copy_conjur_config_map
-  deploy_conjur_followers
+  copy_conjur_config_map	# from default ns, copy conjur master config
   enable_conjur_authentication
-  re_create_conjur_config_map
+  deploy_conjur_followers
+  re_create_conjur_config_map	# in default ns, create new configmap w/ follower url/cert added
 
   echo "Followers created."
 }
@@ -34,8 +35,8 @@ docker_login() {
 
 ###########################
 copy_conjur_config_map() {
-  $CLI delete --ignore-not-found cm $CONJUR_CONFIG_MAP
-  $CLI get cm $CONJUR_CONFIG_MAP -n default -o yaml \
+  $CLI delete --ignore-not-found configmap $CONJUR_CONFIG_MAP
+  $CLI get configmap $CONJUR_CONFIG_MAP -n default -o yaml \
     | sed "s/namespace: default/namespace: $FOLLOWER_NAMESPACE_NAME/" \
     | $CLI create -f -
 }
@@ -43,6 +44,8 @@ copy_conjur_config_map() {
 ###########################
 enable_conjur_authentication() {
   echo "Creating seed-fetcher authenticator role binding."
+
+  $CLI delete --ignore-not-found serviceaccount/conjur
 
   sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" "./deploy-configs/templates/conjur-authenticator-role-binding.template.yaml" \
     > ./deploy-configs/conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME.yaml
@@ -69,24 +72,20 @@ deploy_conjur_followers() {
 
   $CLI create -f ./deploy-configs/conjur-follower-$FOLLOWER_NAMESPACE_NAME.yaml
 
-  echo "Creating passthrough route for conjur-follower service."
-  $CLI create route passthrough --service=conjur-follower
-
-  echo "Waiting for Follower service to initialize - usually takes about 60 seconds."
   conjur_follower_route=$($CLI get routes | grep conjur-follower | awk '{ print $2 }')
+  echo "Waiting for Follower service at https://$conjur_follower_route/health"
+  echo "  to report healthy - usually takes about 60 seconds."
   wait_for_service_200 "https://$conjur_follower_route/health"
 }
 
 ###################################
-# Adds follower url & cert to Conjur config map
-#
 re_create_conjur_config_map() {
   echo "Creating Conjur config map."
 
   $CLI delete --ignore-not-found=true -n default configmap $CONJUR_CONFIG_MAP
 
   # Get master cert from file
-  master_url="https://$CONJUR_MASTER_HOST_NAME:$CONJUR_MASTER_PORT"
+  master_url="https://$CONJUR_MASTER_SERVICE_NAME"
   master_cert=$(cat "$MASTER_CERT_FILE")
   conjur_seed_file_url=$master_url/configuration/$CONJUR_ACCOUNT/seed/follower
 
@@ -96,6 +95,7 @@ re_create_conjur_config_map() {
   follower_cert="$($CLI exec $follower_pod_name -- cat /opt/conjur/etc/ssl/conjur.pem)"
   echo "$follower_cert" > $FOLLOWER_CERT_FILE
 
+  # Create common Conjur config map in default namespace
   $CLI create configmap $CONJUR_CONFIG_MAP \
 	-n default \
 	--from-literal=follower-namespace-name="$FOLLOWER_NAMESPACE_NAME" \
@@ -114,4 +114,4 @@ re_create_conjur_config_map() {
   echo "Conjur config map created."
 }
 
-main $@
+main "$@"

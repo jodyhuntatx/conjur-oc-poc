@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 set -euo pipefail
 
 source ../config/cluster.config
@@ -11,6 +11,7 @@ main() {
 
   prepare_conjur_appliance_image
   prepare_conjur_cli_image
+  prepare_seed_fetcher_image
 
   echo "Docker images pushed."
 }
@@ -36,6 +37,23 @@ prepare_conjur_cli_image() {
 
   if ! is_minienv; then
     docker push $cli_app_image
+  fi
+}
+
+prepare_seed_fetcher_image() {
+  announce "Building and pushing seed-fetcher image."
+
+  if $CONNECTED; then
+    pushd build/seed-fetcher
+      ./build.sh
+    popd
+  fi
+
+  seed_fetcher_image=$(conjur_image seed-fetcher)
+  docker tag seed-fetcher:latest $seed_fetcher_image
+
+  if ! is_minienv; then
+    docker push $seed_fetcher_image
   fi
 }
 

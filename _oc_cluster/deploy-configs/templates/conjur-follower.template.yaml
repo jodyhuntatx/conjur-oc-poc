@@ -11,7 +11,7 @@ spec:
     name: https
   selector:
     app: conjur-follower
-  type: LoadBalancer
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: DeploymentConfig
@@ -27,10 +27,6 @@ spec:
         role: follower
     spec:
       serviceAccountName: conjur-cluster
-      hostAliases:
-      - ip: "{{ CONJUR_MASTER_HOST_IP }}"
-        hostnames:
-        - "{{ CONJUR_MASTER_HOST_NAME }}"
       volumes:
       - name: seedfile
         emptyDir:
@@ -100,7 +96,7 @@ spec:
 
       containers:
       - name: conjur-appliance
-        command: ["/tmp/seedfile/start-follower-docker-master.sh"]
+        command: ["/tmp/seedfile/start-follower-oc-master.sh"]
         image: {{ CONJUR_APPLIANCE_IMAGE }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
