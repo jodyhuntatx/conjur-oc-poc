@@ -12,6 +12,7 @@ main() {
   initialize_namespace
   create_service_account
   create_cluster_role
+  apply_follower_authn_manifest
   configure_oc_rbac
 }
 
@@ -48,6 +49,19 @@ create_cluster_role() {
   $CLI apply -f ./deploy-configs/conjur-authenticator-role-$FOLLOWER_NAMESPACE_NAME.yaml
 }
 
+###################################
+apply_follower_authn_manifest() {
+  echo "Applying manifest in cluster..."
+
+  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" \
+     ./deploy-configs/templates/conjur-follower-authn.template.yaml  \
+     > ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  $CLI apply -f ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
+
+  echo "Manifest applied."
+}
+
 ##################
 configure_oc_rbac() {
   echo "Configuring OpenShift admin permissions."
@@ -58,9 +72,7 @@ configure_oc_rbac() {
   # add permissions for Conjur admin user on registry, default & Conjur cluster namespaces
   oc adm policy add-role-to-user system:registry $FOLLOWER_ADMIN_USERNAME
   oc adm policy add-role-to-user system:image-builder $FOLLOWER_ADMIN_USERNAME
-  oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n default
   oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n $FOLLOWER_NAMESPACE_NAME
-
 }
 
 main "$@"

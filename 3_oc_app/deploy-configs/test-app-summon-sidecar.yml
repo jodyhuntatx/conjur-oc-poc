@@ -39,7 +39,7 @@ spec:
           - name: CONJUR_APPLIANCE_URL
             valueFrom:
               configMapKeyRef:
-                name: {{ APP_CONFIG_MAP_NAME }}
+                name: {{ CONFIG_MAP_NAME }}
                 key: conjur-follower-url
 
         # values from Conjur config map

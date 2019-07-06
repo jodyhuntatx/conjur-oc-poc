@@ -4,14 +4,11 @@ source ../config/cluster.config
 source ../config/$PLATFORM.config
 source ../config/utils.sh
 
-# This script requires OpenShift/K8s cluster admin privileges
-
 #################
 main() {
   announce "Initializing Follower authentication."
 
   whitelist_authenticators
-  apply_manifest
   initialize_variables
 }
 
@@ -31,19 +28,6 @@ whitelist_authenticators() {
   wait_for_service_200 "https://$conjur_master_route/health"
 
   echo "Authenticators updated."
-}
-
-###################################
-apply_manifest() {
-  echo "Applying manifest in cluster..."
-
-  sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" \
-     ./deploy-configs/templates/conjur-follower-authn.template.yaml  \
-     > ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
-
-  $CLI apply -f ./deploy-configs/conjur-follower-authn-$FOLLOWER_NAMESPACE_NAME.yaml
-
-  echo "Manifest applied."
 }
 
 ###################################

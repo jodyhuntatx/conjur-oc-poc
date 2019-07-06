@@ -19,12 +19,7 @@ $CLI login -u $FOLLOWER_ADMIN_USERNAME
 
 ./2_prepare_docker_images.sh
 ./3_deploy_master.sh
-
-oc login -u $CLUSTER_ADMIN_USERNAME
 ./4_init_follower_authn.sh
-
-$CLI login -u $FOLLOWER_ADMIN_USERNAME
 ./5_deploy_conjur_followers.sh
-
 ./6_print_cluster_info.sh
 ./exec-into-cli.sh

@@ -22,9 +22,8 @@ sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" ./deploy-con
   sed -e "s#{{ FOLLOWER_NAMESPACE_NAME }}#$FOLLOWER_NAMESPACE_NAME#g" |
   $CLI create -f -
 
-announce "Setting RBAC privileges."
 # add permissions for Conjur admin user
+announce "Setting RBAC privileges."
 oc adm policy add-role-to-user system:registry $DEVELOPER_USERNAME
 oc adm policy add-role-to-user system:image-builder $DEVELOPER_USERNAME
-oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n $TEST_APP_NAMESPACE_NAME
-#oc adm policy add-role-to-user admin $FOLLOWER_ADMIN_USERNAME -n default
+oc adm policy add-role-to-user admin $DEVELOPER_USERNAME -n $TEST_APP_NAMESPACE_NAME
