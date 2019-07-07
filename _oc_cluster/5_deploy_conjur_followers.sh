@@ -67,7 +67,8 @@ deploy_conjur_followers() {
     sed -e "s#{{ CONJUR_MASTER_PORT }}#$CONJUR_MASTER_PORT#g" |
     sed -e "s#{{ CONJUR_SEED_FETCHER_IMAGE }}#$seed_fetcher_image#g" |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-    sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#${CONJUR_FOLLOWER_COUNT}#g" \
+    sed -e "s#{{ CONJUR_FOLLOWER_COUNT }}#${CONJUR_FOLLOWER_COUNT}#g" |
+    sed -e "s#{{ CONJUR_FOLLOWER_TAINT }}#${CONJUR_FOLLOWER_TAINT}#g" \
     > ./deploy-configs/conjur-follower-$FOLLOWER_NAMESPACE_NAME.yaml
 
   $CLI create -f ./deploy-configs/conjur-follower-$FOLLOWER_NAMESPACE_NAME.yaml

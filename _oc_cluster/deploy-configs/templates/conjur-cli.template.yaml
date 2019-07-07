@@ -17,6 +17,10 @@ spec:
         app: conjur-cli
     spec:
       serviceAccountName: conjur-cluster
+      tolerations:
+      - key: "{{ CONJUR_MASTER_TAINT }}"
+        operator: "Equal"
+        value: "{{ CONJUR_MASTER_TAINT }}"
       containers:
       - name: conjur-cli
         image: {{ DOCKER_IMAGE }}

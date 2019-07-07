@@ -9,11 +9,18 @@ source ../config/utils.sh
 
 main() {
   set_namespace default
+  taint_nodes
   initialize_namespace
   create_service_account
   create_cluster_role
   apply_follower_authn_manifest
   configure_oc_rbac
+}
+
+###################################
+taint_nodes() {
+  oc adm taint nodes --overwrite=true $CONJUR_MASTER_NODE $CONJUR_MASTER_TAINT=$CONJUR_MASTER_TAINT:NoSchedule  
+  oc adm taint nodes --overwrite=true $CONJUR_FOLLOWER_NODES $CONJUR_FOLLOWER_TAINT=$CONJUR_FOLLOWER_TAINT:NoSchedule  
 }
 
 ###################################

@@ -20,6 +20,10 @@ spec:
         app: test-app-summon-sidecar
     spec:
       serviceAccountName: oc-test-app-summon-sidecar
+      tolerations:
+      - key: "{{ CONJUR_APP_TAINT }}"
+        operator: "Equal"
+        value: "{{ CONJUR_APP_TAINT }}"
 
       # Use hostAliases to bypass DNS
       hostAliases:

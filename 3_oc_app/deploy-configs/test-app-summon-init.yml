@@ -20,6 +20,10 @@ spec:
         app: test-app-summon-init
     spec:
       serviceAccountName: oc-test-app-summon-init
+      tolerations:
+      - key: "{{ CONJUR_APP_TAINT }}"
+        operator: "Equal"
+        value: "{{ CONJUR_APP_TAINT }}"
 
       # Use hostAliases to bypass DNS
       hostAliases:

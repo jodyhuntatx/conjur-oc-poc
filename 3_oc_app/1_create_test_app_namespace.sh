@@ -16,6 +16,9 @@ else
   set_namespace $TEST_APP_NAMESPACE_NAME
 fi
 
+# taint nodes
+$CLI adm taint nodes --overwrite=true $CONJUR_APP_NODES $CONJUR_APP_TAINT=$CONJUR_APP_TAINT:NoSchedule  
+
 announce "Creating authenticator role binding."
 $CLI delete --ignore-not-found rolebinding test-app-conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME
 sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" ./deploy-configs/test-app-conjur-authenticator-role-binding.yml |

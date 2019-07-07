@@ -27,6 +27,10 @@ spec:
         role: follower
     spec:
       serviceAccountName: conjur-cluster
+      tolerations:
+      - key: "{{ CONJUR_FOLLOWER_TAINT }}"
+        operator: "Equal"
+        value: "{{ CONJUR_FOLLOWER_TAINT }}"
       volumes:
       - name: seedfile
         emptyDir:
