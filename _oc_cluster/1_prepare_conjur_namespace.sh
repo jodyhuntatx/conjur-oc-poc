@@ -19,8 +19,10 @@ main() {
 
 ###################################
 taint_nodes() {
-  oc adm taint nodes --overwrite=true $CONJUR_MASTER_NODE $CONJUR_MASTER_TAINT=$CONJUR_MASTER_TAINT:NoSchedule  
-  oc adm taint nodes --overwrite=true $CONJUR_FOLLOWER_NODES $CONJUR_FOLLOWER_TAINT=$CONJUR_FOLLOWER_TAINT:NoSchedule  
+  oc adm taint nodes --overwrite=true $CONJUR_MASTER_NODE \
+	$CONJUR_MASTER_TAINT_KEY=$CONJUR_MASTER_TAINT_VALUE:NoSchedule  
+  oc adm taint nodes --overwrite=true $CONJUR_FOLLOWER_NODES \
+	$CONJUR_FOLLOWER_TAINT_KEY=$CONJUR_FOLLOWER_TAINT_VALUE:NoSchedule  
 }
 
 ###################################

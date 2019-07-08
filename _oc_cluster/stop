@@ -11,6 +11,12 @@ $CLI login -u $CLUSTER_ADMIN_USERNAME
 
 set_namespace $FOLLOWER_NAMESPACE_NAME
 
+echo "Untainting nodes."
+$CLI adm taint nodes $CONJUR_MASTER_NODE \
+	$CONJUR_MASTER_TAINT_KEY:NoSchedule-
+$CLI adm taint nodes $CONJUR_FOLLOWER_NODES \
+	$CONJUR_FOLLOWER_TAINT_KEY:NoSchedule-
+
 echo "Deleting CLI pod."
 $CLI delete --ignore-not-found deploy/conjur-cli
 

@@ -46,7 +46,8 @@ deploy_conjur_master_cluster() {
   conjur_appliance_image=$(conjur_image "conjur-appliance")
 
   sed -e "s#{{ CONJUR_APPLIANCE_IMAGE }}#$conjur_appliance_image#g" "./deploy-configs/templates/conjur-master.template.yaml" |
-      sed -e "s#{{ CONJUR_MASTER_TAINT }}#$CONJUR_MASTER_TAINT#g" |
+      sed -e "s#{{ CONJUR_MASTER_TAINT_KEY }}#$CONJUR_MASTER_TAINT_KEY#g" |
+      sed -e "s#{{ CONJUR_MASTER_TAINT_VALUE }}#$CONJUR_MASTER_TAINT_VALUE#g" |
       sed -e "s#{{ AUTHENTICATOR_ID }}#$AUTHENTICATOR_ID#g" |
       sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
       $CLI create -f -
@@ -59,7 +60,8 @@ deploy_conjur_cli() {
   cli_app_image=$(conjur_image conjur-cli)
   sed -e "s#{{ DOCKER_IMAGE }}#$cli_app_image#g" ./deploy-configs/templates/conjur-cli.template.yaml |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
-    sed -e "s#{{ CONJUR_MASTER_TAINT }}#$CONJUR_MASTER_TAINT#g" |
+    sed -e "s#{{ CONJUR_MASTER_TAINT_KEY }}#$CONJUR_MASTER_TAINT_KEY#g" |
+    sed -e "s#{{ CONJUR_MASTER_TAINT_VALUE }}#$CONJUR_MASTER_TAINT_VALUE#g" |
     $CLI create -f -
 }
 

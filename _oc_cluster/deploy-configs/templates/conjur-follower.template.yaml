@@ -28,9 +28,9 @@ spec:
     spec:
       serviceAccountName: conjur-cluster
       tolerations:
-      - key: "{{ CONJUR_FOLLOWER_TAINT }}"
+      - key: "{{ CONJUR_FOLLOWER_TAINT_KEY }}"
         operator: "Equal"
-        value: "{{ CONJUR_FOLLOWER_TAINT }}"
+        value: "{{ CONJUR_FOLLOWER_TAINT_VALUE }}"
       volumes:
       - name: seedfile
         emptyDir:

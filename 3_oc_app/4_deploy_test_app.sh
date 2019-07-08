@@ -91,7 +91,8 @@ deploy_sidecar_app() {
   sed -e "s#{{ TEST_APP_DOCKER_IMAGE }}#$test_sidecar_app_docker_image#g" ./deploy-configs/test-app-summon-sidecar.yml |
     sed -e "s#{{ AUTHENTICATOR_CLIENT_IMAGE }}#$authenticator_client_image#g" |
     sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
-    sed -e "s#{{ CONJUR_APP_TAINT }}#$CONJUR_APP_TAINT#g" |
+    sed -e "s#{{ CONJUR_APP_TAINT_KEY }}#$CONJUR_APP_TAINT_KEY#g" |
+    sed -e "s#{{ CONJUR_APP_TAINT_VALUE }}#$CONJUR_APP_TAINT_VALUE#g" |
     sed -e "s#{{ CONFIG_MAP_NAME }}#$CONJUR_CONFIG_MAP#g" |
     sed -e "s#{{ APP_CONFIG_MAP_NAME }}#$APP_CONFIG_MAP#g" |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |
@@ -116,7 +117,8 @@ deploy_init_container_app() {
   sed -e "s#{{ TEST_APP_DOCKER_IMAGE }}#$test_init_app_docker_image#g" ./deploy-configs/test-app-summon-init.yml |
     sed -e "s#{{ AUTHENTICATOR_CLIENT_IMAGE }}#$authenticator_client_image#g" |
     sed -e "s#{{ TEST_APP_NAMESPACE_NAME }}#$TEST_APP_NAMESPACE_NAME#g" |
-    sed -e "s#{{ CONJUR_APP_TAINT }}#$CONJUR_APP_TAINT#g" |
+    sed -e "s#{{ CONJUR_APP_TAINT_KEY }}#$CONJUR_APP_TAINT_KEY#g" |
+    sed -e "s#{{ CONJUR_APP_TAINT_VALUE }}#$CONJUR_APP_TAINT_VALUE#g" |
     sed -e "s#{{ CONFIG_MAP_NAME }}#$CONJUR_CONFIG_MAP#g" |
     sed -e "s#{{ APP_CONFIG_MAP_NAME }}#$APP_CONFIG_MAP#g" |
     sed -e "s#{{ IMAGE_PULL_POLICY }}#$IMAGE_PULL_POLICY#g" |

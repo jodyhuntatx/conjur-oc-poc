@@ -17,7 +17,8 @@ else
 fi
 
 # taint nodes
-$CLI adm taint nodes --overwrite=true $CONJUR_APP_NODES $CONJUR_APP_TAINT=$CONJUR_APP_TAINT:NoSchedule  
+$CLI adm taint nodes --overwrite=true $CONJUR_APP_NODES \
+	$CONJUR_APP_TAINT_KEY=$CONJUR_APP_TAINT_VALUE:NoSchedule  
 
 announce "Creating authenticator role binding."
 $CLI delete --ignore-not-found rolebinding test-app-conjur-authenticator-role-binding-$FOLLOWER_NAMESPACE_NAME
