@@ -33,6 +33,7 @@ docker_login() {
 }
 
 ###########################
+# Get copy of conjur configmap from default namespace
 copy_conjur_config_map() {
   $CLI delete --ignore-not-found cm $CONJUR_CONFIG_MAP
   $CLI get cm $CONJUR_CONFIG_MAP -n default -o yaml \
